@@ -16,6 +16,7 @@ from .extractors import TankValues, extract_meter_sales, extract_tank_data
 from .formulas import build_average_formula, build_total_formulas
 from .matcher import is_protected_column, match_station_columns
 from .utils import decimal_to_excel
+from .xml_preserver import preserve_gear_extensions
 
 logger = logging.getLogger(__name__)
 
@@ -170,6 +171,11 @@ def process_gear_batch(
                             if val is not None:
                                 sheet.cell(row_idx, col_idx).value = decimal_to_excel(val)
 
+                        col_letter = get_column_letter(col_idx)
+                        sheet.cell(config.gear_percent_row, col_idx).value = (
+                            f"={col_letter}{config.actual_gear_row}/{col_letter}{config.expected_gear_row}*100"
+                        )
+
                         prev_formula = sheet.cell(config.previous_average_gear_row, col_idx).value
                         avg_formula = build_average_formula(prev_formula, col_idx, config.gear_percent_row, meter_value)
                         sheet.cell(config.average_gear_row, col_idx).value = avg_formula
@@ -215,6 +221,17 @@ def process_gear_batch(
             with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx", prefix="GEAR_FILLED_") as out_tmp:
                 output_path = Path(out_tmp.name)
             master_wb.save(output_path)
+            master_wb.close()
+            master_wb = None
+
+            # Restore enhanced conditional formatting (green/yellow/red colors) stripped by openpyxl
+            preserve_gear_extensions(
+                source_master_path=master_path,
+                generated_output_path=output_path,
+                gear_sheet_name=config.gear_sheet_name,
+                gear_percent_row=config.gear_percent_row,
+                average_gear_row=config.average_gear_row,
+            )
 
     finally:
         if master_wb:

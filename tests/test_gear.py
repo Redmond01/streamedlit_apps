@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from decimal import Decimal
+from pathlib import Path
 import openpyxl
 
 from core.gear.config import GearConfig, ConfigError
@@ -167,4 +168,73 @@ def test_process_gear_batch_integration(tmp_path_factory=None):
 
     finally:
         cleanup_files(master_path, src_path)
+
+
+def test_preserve_gear_extensions_integration():
+    import tempfile
+    import zipfile
+    from core.gear.xml_preserver import preserve_gear_extensions
+    from core.memory import cleanup_files
+
+    # 1. Create a dummy master zip simulating Excel with x14:conditionalFormatting
+    master_wb = openpyxl.Workbook()
+    ws = master_wb.active
+    ws.title = "Sheet1"
+    ws["A1"] = "Test"
+
+    with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as f_orig:
+        master_wb.save(f_orig.name)
+        orig_path = Path(f_orig.name)
+
+    # Inject dummy extLst into orig_path
+    with zipfile.ZipFile(orig_path, "r") as z:
+        files = {name: z.read(name) for name in z.namelist()}
+    
+    sheet_xml = files["xl/worksheets/sheet1.xml"].decode("utf-8")
+    dummy_ext = (
+        '<extLst><ext uri="{78C0D931-6437-407d-A8EE-F0AAD7539E65}" xmlns:x14="http://schemas.microsoft.com/office/spreadsheetml/2009/9/main">'
+        '<x14:conditionalFormattings><x14:conditionalFormatting xmlns:xm="http://schemas.microsoft.com/office/excel/2006/main">'
+        '<x14:cfRule type="cellIs" priority="1" operator="lessThan" id="{11111111-2222-3333-4444-555555555555}">'
+        '<xm:f>1</xm:f><x14:dxf><font><b/><color indexed="2"/></font></x14:dxf></x14:cfRule>'
+        '<xm:sqref>A134:IW134</xm:sqref></x14:conditionalFormatting></x14:conditionalFormattings></ext></extLst>'
+    )
+    sheet_xml = sheet_xml.replace("</worksheet>", dummy_ext + "</worksheet>")
+    files["xl/worksheets/sheet1.xml"] = sheet_xml.encode("utf-8")
+
+    with zipfile.ZipFile(orig_path, "w", compression=zipfile.ZIP_DEFLATED) as z:
+        for name, data in files.items():
+            z.writestr(name, data)
+
+    # 2. Simulate openpyxl stripping it in output
+    wb_out = openpyxl.load_workbook(orig_path)
+    with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as f_out:
+        wb_out.save(f_out.name)
+        out_path = Path(f_out.name)
+    wb_out.close()
+
+    try:
+        # Verify openpyxl stripped it
+        with zipfile.ZipFile(out_path, "r") as z:
+            assert "<extLst>" not in z.read("xl/worksheets/sheet1.xml").decode("utf-8")
+
+        # 3. Call preserve_gear_extensions
+        success = preserve_gear_extensions(
+            source_master_path=orig_path,
+            generated_output_path=out_path,
+            gear_sheet_name="Sheet1",
+            gear_percent_row=134,
+            average_gear_row=135,
+        )
+        assert success is True
+
+        # 4. Verify it was restored into out_path
+        with zipfile.ZipFile(out_path, "r") as z:
+            restored_xml = z.read("xl/worksheets/sheet1.xml").decode("utf-8")
+            assert "<extLst>" in restored_xml
+            assert "x14:conditionalFormatting" in restored_xml
+            assert "xmlns:x14=" in restored_xml
+
+    finally:
+        cleanup_files(orig_path, out_path)
+
 
