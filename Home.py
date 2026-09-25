@@ -35,6 +35,7 @@ def render_home_dashboard() -> None:
 
     st.markdown("### 🛠️ Available Automation Tools")
 
+    st.markdown("#### ⛽ Fuel Operations")
     col1, col2 = st.columns(2)
 
     with col1:
@@ -43,7 +44,7 @@ def render_home_dashboard() -> None:
             <div style="background: #1e293b; padding: 1.25rem; border-radius: 8px; border: 1px solid #334155; height: 100%;">
                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                     <span style="font-size: 1.5rem;">⛽</span>
-                    <h4 style="margin: 0; color: #38bdf8;">1. Gear Automation</h4>
+                    <h4 style="margin: 0; color: #38bdf8;">Gear Automation</h4>
                 </div>
                 <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 12px;">
                     Batch process 50+ station sales workbooks simultaneously. Extracts dipping & meter sales, resolves station column mappings, calculates running averages, and compiles master total formulas.
@@ -63,16 +64,16 @@ def render_home_dashboard() -> None:
             """
             <div style="background: #1e293b; padding: 1.25rem; border-radius: 8px; border: 1px solid #334155; height: 100%;">
                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                    <span style="font-size: 1.5rem;">📋</span>
-                    <h4 style="margin: 0; color: #38bdf8;">2. EOD JSON Extractor</h4>
+                    <span style="font-size: 1.5rem;">📊</span>
+                    <h4 style="margin: 0; color: #38bdf8;">Daily Sales Aggregator</h4>
                 </div>
                 <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 12px;">
-                    Scans reconciliation cashbook workbooks to extract active POS terminals (SGR, OBX, AGS, TA) into a clean JSON loop configuration for Moniepoint Chrome Extension automation.
+                    Extracts daily PMS, AGO, and LPG sales volumes from 50+ station workbooks into the monthly master sales report across all calendar days, keeping formulas intact.
                 </p>
                 <ul style="color: #cbd5e1; font-size: 0.85rem; padding-left: 20px;">
-                    <li>Automatic date & report block discovery</li>
-                    <li>Configurable POS skip threshold (default: skips 1-10)</li>
-                    <li>One-click JSON copy & file download</li>
+                    <li>Multi-day historical or single-day sync modes</li>
+                    <li>Fuzzy station column resolution across PMS, AGO, LPG</li>
+                    <li>Preserves all column and row SUM formulas</li>
                 </ul>
             </div>
             """,
@@ -80,24 +81,25 @@ def render_home_dashboard() -> None:
         )
 
     st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
+    st.markdown("#### 💳 POS & Bank Reconciliation")
 
-    col3, col4 = st.columns(2)
+    col3, col4, col5 = st.columns(3)
 
     with col3:
         st.markdown(
             """
             <div style="background: #1e293b; padding: 1.25rem; border-radius: 8px; border: 1px solid #334155; height: 100%;">
                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                    <span style="font-size: 1.5rem;">📥</span>
-                    <h4 style="margin: 0; color: #38bdf8;">3. EOD API Loader</h4>
+                    <span style="font-size: 1.5rem;">📋</span>
+                    <h4 style="margin: 0; color: #38bdf8;">EOD JSON Extractor</h4>
                 </div>
                 <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 12px;">
-                    Ingests Moniepoint daily/monthly EOD transaction dumps and syncs amounts into the CASHBOOK column of your master reconciliation workbook.
+                    Scans reconciliation cashbook workbooks to extract active POS terminals into a clean JSON loop configuration for Moniepoint Chrome Extension automation.
                 </p>
                 <ul style="color: #cbd5e1; font-size: 0.85rem; padding-left: 20px;">
-                    <li>Automated formula generation (CASHBOOK - BANK)</li>
-                    <li>Generates formatted 'EOD Extract Audit' sheet</li>
-                    <li>Preserves custom styles, fonts, and formulas</li>
+                    <li>Automatic date discovery</li>
+                    <li>Configurable POS skip threshold</li>
+                    <li>One-click JSON download</li>
                 </ul>
             </div>
             """,
@@ -109,15 +111,36 @@ def render_home_dashboard() -> None:
             """
             <div style="background: #1e293b; padding: 1.25rem; border-radius: 8px; border: 1px solid #334155; height: 100%;">
                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <span style="font-size: 1.5rem;">📥</span>
+                    <h4 style="margin: 0; color: #38bdf8;">EOD API Loader</h4>
+                </div>
+                <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 12px;">
+                    Ingests Moniepoint daily/monthly EOD transaction dumps and syncs amounts into the CASHBOOK column of your master reconciliation workbook.
+                </p>
+                <ul style="color: #cbd5e1; font-size: 0.85rem; padding-left: 20px;">
+                    <li>Automated formula generation (CASHBOOK - BANK)</li>
+                    <li>Generates formatted 'EOD Extract Audit' sheet</li>
+                    <li>Preserves custom styles and formulas</li>
+                </ul>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with col5:
+        st.markdown(
+            """
+            <div style="background: #1e293b; padding: 1.25rem; border-radius: 8px; border: 1px solid #334155; height: 100%;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                     <span style="font-size: 1.5rem;">🏦</span>
-                    <h4 style="margin: 0; color: #38bdf8;">4. Bank Statement POS Loader</h4>
+                    <h4 style="margin: 0; color: #38bdf8;">Bank Statement Loader</h4>
                 </div>
                 <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 12px;">
                     Loads Chrome extension POS JSON exports into the target reconciliation workbook's BANK STATEMENT column, injecting cell comments for failed records.
                 </p>
                 <ul style="color: #cbd5e1; font-size: 0.85rem; padding-left: 20px;">
-                    <li>Automatic report date inference from JSON runDate</li>
-                    <li>Detailed match statistics (OK, Failed, Missing)</li>
+                    <li>Automatic report date inference</li>
+                    <li>Detailed match statistics</li>
                     <li>Hover comments with POS error details</li>
                 </ul>
             </div>

@@ -9,7 +9,8 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from tests import test_memory, test_gear, test_pos_recon
+from tests import test_memory, test_gear, test_pos_recon, test_sales
+import unittest
 
 def run_tests():
     modules = [test_memory, test_gear, test_pos_recon]
@@ -32,6 +33,13 @@ def run_tests():
                     print(f"  [FAIL] {mod.__name__}.{attr}: {exc}")
                     traceback.print_exc()
                     failed += 1
+
+    # Run test_sales (unittest suite)
+    suite = unittest.defaultTestLoader.loadTestsFromModule(test_sales)
+    runner = unittest.TextTestRunner(verbosity=1)
+    res = runner.run(suite)
+    passed += (res.testsRun - len(res.failures) - len(res.errors))
+    failed += (len(res.failures) + len(res.errors))
 
     print("=" * 60)
     print(f"TEST RESULTS: {passed} passed, {failed} failed")

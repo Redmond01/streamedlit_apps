@@ -22,7 +22,12 @@ NAVIGATION_CONFIG = {
             "target": "pages/1_⛽_Gear_Automation.py",
             "title": "Gear Automation",             # <-- Edit your display title here!
             "icon": "⛽",
-        }
+        },
+        {
+            "target": "pages/5_📊_Daily_Sales_Aggregator.py",
+            "title": "Daily Sales Aggregator",      # <-- Edit your display title here!
+            "icon": "📊",
+        },
     ],
     "POS & Bank Reconciliation": [
         {
