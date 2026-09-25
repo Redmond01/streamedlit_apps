@@ -63,7 +63,7 @@ with col2:
         <div style="background: #1e293b; padding: 1.25rem; border-radius: 8px; border: 1px solid #334155; height: 100%;">
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                 <span style="font-size: 1.5rem;">📋</span>
-                <h4 style="margin: 0; color: #38bdf8;">2. Cashbook Loop Extractor</h4>
+                <h4 style="margin: 0; color: #38bdf8;">2. EOD JONS EXTRACTOR</h4>
             </div>
             <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 12px;">
                 Scans reconciliation cashbook workbooks to extract active POS terminals (SGR, OBX, AGS, TA) into a clean JSON loop configuration for Moniepoint Chrome Extension automation.
@@ -88,7 +88,7 @@ with col3:
         <div style="background: #1e293b; padding: 1.25rem; border-radius: 8px; border: 1px solid #334155; height: 100%;">
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                 <span style="font-size: 1.5rem;">📥</span>
-                <h4 style="margin: 0; color: #38bdf8;">3. EOD Cashbook Sync</h4>
+                <h4 style="margin: 0; color: #38bdf8;">3. EOD API LOADER</h4>
             </div>
             <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 12px;">
                 Ingests Moniepoint daily/monthly EOD transaction dumps and syncs amounts into the CASHBOOK column of your master reconciliation workbook.

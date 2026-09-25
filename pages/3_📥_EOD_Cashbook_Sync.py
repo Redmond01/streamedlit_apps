@@ -14,7 +14,7 @@ from utils.ui_components import (
 )
 
 st.set_page_config(
-    page_title="EOD Cashbook Sync | POS Automation",
+    page_title="EOD API LOADER | POS Automation",
     page_icon="📥",
     layout="wide",
 )
