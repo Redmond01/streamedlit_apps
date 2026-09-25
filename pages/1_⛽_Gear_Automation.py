@@ -14,11 +14,14 @@ from utils.ui_components import (
     render_metric_cards,
 )
 
-st.set_page_config(
-    page_title="Gear Automation | Station Fuel Aggregator",
-    page_icon="⛽",
-    layout="wide",
-)
+try:
+    st.set_page_config(
+        page_title="Gear Automation | Station Fuel Aggregator",
+        page_icon="⛽",
+        layout="wide",
+    )
+except Exception:
+    pass
 
 render_memory_badge()
 
