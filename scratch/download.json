@@ -1,0 +1,1057 @@
+{
+  "export_meta": {
+    "generated_at": "2026-09-27T10:47:24.886Z",
+    "target_reconciliation_date": "2026-09-25",
+    "date_of_reconciliation_pulled": "2026-09-25",
+    "date_of_reconcillation_pulled": "2026-09-25",
+    "export_filename": "2026-09-25_(reconcillation.json)",
+    "total_records": 41,
+    "group_name": "Accountant, HR, Miss, Miss, Mr, Mr, +234 810 302 9619, +234 702 648 3983, +234 903 076 7371, +234 802 992 9255, +234 803 488 3525, +234 803 044 8551, +234 706 055 6397, +234 706 325 0572, +234 813 925 3104, +234 902 888 2850, +234 806 422 0606, +234 816 975 5874, +234 906 979 9381, +234 810 451 5308, +234 803 501 6257, +234 806 059 1404, +234 812 978 1092, +234 810 068 2694, +234 906 944 8010, +234 708 037 3413, +234 703 535 1168, +234 802 844 3631, +234 806 869 3767, +234 708 292 8596, +234 703 706 4054, +234 803 307 5885, +234 706 293 9869, +234 907 634 5569, +234 816 623 6126, +234 802 346 9006, +234 907 443 0524, +234 806 132 6768, +234 706 903 8671, +234 808 948 6322, +234 803 080 4647, +234 802 253 6029, +234 904 495 8279, +234 803 293 5984, +234 703 916 2599, +234 911 597 7488, +234 803 845 0077, +234 803 252 6950, +234 915 563 5023, +234 816 529 8787, +234 813 090 1883, +234 706 636 4245, +234 901 889 6657, +234 701 960 6328, +234 816 943 5355, +234 813 814 6855, +234 816 870 4932, +234 701 482 9293, +234 810 624 5479, +234 703 314 6639, +234 706 955 7334, +234 913 122 6360, +234 805 769 9971, +234 805 753 6253, +234 906 659 9624, +234 915 383 4710, +234 814 044 0598, +234 814 595 4462, +234 811 022 8073, +234 705 548 2616, +212 630-273211, +234 706 164 4404, +234 803 464 5382, +234 806 635 7446, +234 803 372 6048, +234 706 967 4289, You"
+  },
+  "records": [
+    {
+      "officer_message_id": "AC17778BB8AF0675AD6F14934B1E08BB",
+      "date": "2026-09-25",
+      "time": "09:46",
+      "bank_officer": {
+        "name": "Lawrence",
+        "phone": "+2348030804647",
+        "bank": "Union Bank",
+        "is_authorized": true
+      },
+      "confirmation": {
+        "raw_text": "Amt#697,100 confirmed",
+        "parsed_amount": 697100,
+        "status": "APPROVED"
+      },
+      "branch_submission": {
+        "manager_phone": "+2347082928596",
+        "manager_handle": "Duduke Mi",
+        "raw_caption": "Photo",
+        "mapped_branch_id": null,
+        "has_receipt_image": true
+      },
+      "validation_flags": [
+        "UNMAPPED_BRANCH"
+      ]
+    },
+    {
+      "officer_message_id": "ACC981C6A2DF17D9DC820FCCD20A02BD",
+      "date": "2026-09-25",
+      "time": "10:55",
+      "bank_officer": {
+        "name": "Lawrence",
+        "phone": "+2348030804647",
+        "bank": "Union Bank",
+        "is_authorized": true
+      },
+      "confirmation": {
+        "raw_text": "Amt#800,000 confirmed",
+        "parsed_amount": 800000,
+        "status": "APPROVED"
+      },
+      "branch_submission": {
+        "manager_phone": "+2349115977488",
+        "manager_handle": "Òĺámïļêķăñ",
+        "raw_caption": "Photo",
+        "mapped_branch_id": null,
+        "has_receipt_image": true
+      },
+      "validation_flags": [
+        "UNMAPPED_BRANCH"
+      ]
+    },
+    {
+      "officer_message_id": "AC27799C562A5EDF9DF264F8F15C86D2",
+      "date": "2026-09-25",
+      "time": "10:55",
+      "bank_officer": {
+        "name": "Lawrence",
+        "phone": "+2348030804647",
+        "bank": "Union Bank",
+        "is_authorized": true
+      },
+      "confirmation": {
+        "raw_text": "Amt#662,750 confirmed",
+        "parsed_amount": 662750,
+        "status": "APPROVED"
+      },
+      "branch_submission": {
+        "manager_phone": "+2348057699971",
+        "manager_handle": "Wealth",
+        "raw_caption": "Photo",
+        "mapped_branch_id": null,
+        "has_receipt_image": true
+      },
+      "validation_flags": [
+        "UNMAPPED_BRANCH"
+      ]
+    },
+    {
+      "officer_message_id": "AC665F799564C57F304947A21B69F0D6",
+      "date": "2026-09-25",
+      "time": "11:49",
+      "bank_officer": {
+        "name": "Lawrence",
+        "phone": "+2348030804647",
+        "bank": "Union Bank",
+        "is_authorized": true
+      },
+      "confirmation": {
+        "raw_text": "Amt#1,482,500 confirmed",
+        "parsed_amount": 1482500,
+        "status": "APPROVED"
+      },
+      "branch_submission": {
+        "manager_phone": "+2348130901883",
+        "manager_handle": "Papa Tees Collections",
+        "raw_caption": "OYO 1",
+        "mapped_branch_id": null,
+        "has_receipt_image": true
+      },
+      "validation_flags": [
+        "UNMAPPED_BRANCH"
+      ]
+    },
+    {
+      "officer_message_id": "AC6E2E58F163420EEE64C1C2F02D40C2",
+      "date": "2026-09-25",
+      "time": "11:49",
+      "bank_officer": {
+        "name": "Lawrence",
+        "phone": "+2348030804647",
+        "bank": "Union Bank",
+        "is_authorized": true
+      },
+      "confirmation": {
+        "raw_text": "Amt#296,150 confirmed",
+        "parsed_amount": 296150,
+        "status": "APPROVED"
+      },
+      "branch_submission": {
+        "manager_phone": "+2349115977488",
+        "manager_handle": "Òĺámïļêķăñ",
+        "raw_caption": "CAR GO 2",
+        "mapped_branch_id": null,
+        "has_receipt_image": true
+      },
+      "validation_flags": [
+        "UNMAPPED_BRANCH"
+      ]
+    },
+    {
+      "officer_message_id": "ACB4623256E843A2D09351756B085F94",
+      "date": "2026-09-25",
+      "time": "11:50",
+      "bank_officer": {
+        "name": "Lawrence",
+        "phone": "+2348030804647",
+        "bank": "Union Bank",
+        "is_authorized": true
+      },
+      "confirmation": {
+        "raw_text": "Amt#2,111,600 confirmed",
+        "parsed_amount": 2111600,
+        "status": "APPROVED"
+      },
+      "branch_submission": {
+        "manager_phone": "+2348103029619",
+        "manager_handle": "Bisola",
+        "raw_caption": "Itamaga #2,111,600",
+        "mapped_branch_id": null,
+        "has_receipt_image": true
+      },
+      "validation_flags": [
+        "UNMAPPED_BRANCH"
+      ]
+    },
+    {
+      "officer_message_id": "ACE6164EAFF087D1BC19C1A420063877",
+      "date": "2026-09-25",
+      "time": "11:51",
+      "bank_officer": {
+        "name": "Lawrence",
+        "phone": "+2348030804647",
+        "bank": "Union Bank",
+        "is_authorized": true
+      },
+      "confirmation": {
+        "raw_text": "Amt#2,357,000 confirmed",
+        "parsed_amount": 2357000,
+        "status": "APPROVED"
+      },
+      "branch_submission": {
+        "manager_phone": "+2348060591404",
+        "manager_handle": "Bammy Pets",
+        "raw_caption": "2,357,000\nIGANDO",
+        "mapped_branch_id": null,
+        "has_receipt_image": true
+      },
+      "validation_flags": [
+        "UNMAPPED_BRANCH"
+      ]
+    },
+    {
+      "officer_message_id": "ACEB4B1C3FE921D50BCC9EF5A5214411",
+      "date": "2026-09-25",
+      "time": "12:45",
+      "bank_officer": {
+        "name": "Lawrence",
+        "phone": "+2348030804647",
+        "bank": "Union Bank",
+        "is_authorized": true
+      },
+      "confirmation": {
+        "raw_text": "Amt#3,030,200 confirmed",
+        "parsed_amount": 3030200,
+        "status": "APPROVED"
+      },
+      "branch_submission": {
+        "manager_phone": "+2347039162599",
+        "manager_handle": "ojumoolasayo7@gmail.com",
+        "raw_caption": "Guru",
+        "mapped_branch_id": null,
+        "has_receipt_image": true
+      },
+      "validation_flags": [
+        "UNMAPPED_BRANCH"
+      ]
+    },
+    {
+      "officer_message_id": "ACA6E1DB397D8B3A4DED3225E68CD61A",
+      "date": "2026-09-25",
+      "time": "14:36",
+      "bank_officer": {
+        "name": "Lawrence",
+        "phone": "+2348030804647",
+        "bank": "Union Bank",
+        "is_authorized": true
+      },
+      "confirmation": {
+        "raw_text": "Amt#4,250,870 confirmed",
+        "parsed_amount": 4250870,
+        "status": "APPROVED"
+      },
+      "branch_submission": {
+        "manager_phone": "+2348032526950",
+        "manager_handle": "Olowoseunre Temitope",
+        "raw_caption": "sagamu 1",
+        "mapped_branch_id": null,
+        "has_receipt_image": true
+      },
+      "validation_flags": [
+        "UNMAPPED_BRANCH"
+      ]
+    },
+    {
+      "officer_message_id": "ACADA33A67F6DBDB5C17877C70D1E399",
+      "date": "2026-09-25",
+      "time": "15:07",
+      "bank_officer": {
+        "name": "Lawrence",
+        "phone": "+2348030804647",
+        "bank": "Union Bank",
+        "is_authorized": true
+      },
+      "confirmation": {
+        "raw_text": "Amt#2,262,500 confirmed",
+        "parsed_amount": 2262500,
+        "status": "APPROVED"
+      },
+      "branch_submission": {
+        "manager_phone": "+2348169755874",
+        "manager_handle": "Aperireeee",
+        "raw_caption": "Photo",
+        "mapped_branch_id": null,
+        "has_receipt_image": true
+      },
+      "validation_flags": [
+        "UNMAPPED_BRANCH"
+      ]
+    },
+    {
+      "officer_message_id": "AC4E3F0C207E51847AF529BFBDD92EE9",
+      "date": "2026-09-25",
+      "time": "16:54",
+      "bank_officer": {
+        "name": "Abimbola",
+        "phone": "+2348034883525",
+        "bank": "Access Bank",
+        "is_authorized": true
+      },
+      "confirmation": {
+        "raw_text": "N2,450,000. Confirmed",
+        "parsed_amount": 2450000,
+        "status": "APPROVED"
+      },
+      "branch_submission": {
+        "manager_phone": "+2348038450077",
+        "manager_handle": "olayemi65@gmail.com",
+        "raw_caption": "Jah Michael",
+        "mapped_branch_id": "BR_JAH_MICHAEL",
+        "has_receipt_image": true
+      },
+      "validation_flags": []
+    },
+    {
+      "officer_message_id": "AC6E284AD5F1505AAB1A0263DC6A166B",
+      "date": "2026-09-25",
+      "time": "16:55",
+      "bank_officer": {
+        "name": "Abimbola",
+        "phone": "+2348034883525",
+        "bank": "Access Bank",
+        "is_authorized": true
+      },
+      "confirmation": {
+        "raw_text": "N2,350,650. Confirmed",
+        "parsed_amount": 2350650,
+        "status": "APPROVED"
+      },
+      "branch_submission": {
+        "manager_phone": "+2349030767371",
+        "manager_handle": "TEEDOSH",
+        "raw_caption": "Ipaja",
+        "mapped_branch_id": "BR_IPAJA",
+        "has_receipt_image": true
+      },
+      "validation_flags": []
+    },
+    {
+      "officer_message_id": "AC340A6FA3058720B5BAE37A1460BFDB",
+      "date": "2026-09-25",
+      "time": "16:55",
+      "bank_officer": {
+        "name": "Abimbola",
+        "phone": "+2348034883525",
+        "bank": "Access Bank",
+        "is_authorized": true
+      },
+      "confirmation": {
+        "raw_text": "N1,036,050. Confirmed",
+        "parsed_amount": 1036050,
+        "status": "APPROVED"
+      },
+      "branch_submission": {
+        "manager_phone": "+2347026483983",
+        "manager_handle": "",
+        "raw_caption": "Ifo",
+        "mapped_branch_id": "BR_IFO",
+        "has_receipt_image": true
+      },
+      "validation_flags": []
+    },
+    {
+      "officer_message_id": "AC56029E99E6502766F363C99C289DCE",
+      "date": "2026-09-25",
+      "time": "16:56",
+      "bank_officer": {
+        "name": "Abimbola",
+        "phone": "+2348034883525",
+        "bank": "Access Bank",
+        "is_authorized": true
+      },
+      "confirmation": {
+        "raw_text": "N308,390. Confirmed",
+        "parsed_amount": 308390,
+        "status": "APPROVED"
+      },
+      "branch_submission": {
+        "manager_phone": "+2349069448010",
+        "manager_handle": "D Money",
+        "raw_caption": "IFE ROAD 3\n308,390",
+        "mapped_branch_id": "BR_IFE_RD_3",
+        "has_receipt_image": true
+      },
+      "validation_flags": []
+    },
+    {
+      "officer_message_id": "ACF525E51966FE387A949B6F1023C595",
+      "date": "2026-09-25",
+      "time": "16:56",
+      "bank_officer": {
+        "name": "Abimbola",
+        "phone": "+2348034883525",
+        "bank": "Access Bank",
+        "is_authorized": true
+      },
+      "confirmation": {
+        "raw_text": "N665,050. Confirmed",
+        "parsed_amount": 665050,
+        "status": "APPROVED"
+      },
+      "branch_submission": {
+        "manager_phone": "+2347019606328",
+        "manager_handle": "Q Quality",
+        "raw_caption": "OBX iyana bodija payment for today",
+        "mapped_branch_id": "BR_BODIJA",
+        "has_receipt_image": true
+      },
+      "validation_flags": []
+    },
+    {
+      "officer_message_id": "ACB7450B0D2A959023677EE69AAF3D55",
+      "date": "2026-09-25",
+      "time": "16:57",
+      "bank_officer": {
+        "name": "Abimbola",
+        "phone": "+2348034883525",
+        "bank": "Access Bank",
+        "is_authorized": true
+      },
+      "confirmation": {
+        "raw_text": "N749,900. Confirmed",
+        "parsed_amount": 749900,
+        "status": "APPROVED"
+      },
+      "branch_submission": {
+        "manager_phone": "+2347080373413",
+        "manager_handle": "davidomenka68@gmail.com",
+        "raw_caption": "OGBOMOSO 1",
+        "mapped_branch_id": "BR_OGBOMOSO_1",
+        "has_receipt_image": true
+      },
+      "validation_flags": []
+    },
+    {
+      "officer_message_id": "ACC62A2960E56E7CBD29106EF1D30F3C",
+      "date": "2026-09-25",
+      "time": "16:57",
+      "bank_officer": {
+        "name": "Abimbola",
+        "phone": "+2348034883525",
+        "bank": "Access Bank",
+        "is_authorized": true
+      },
+      "confirmation": {
+        "raw_text": "N825,200. Confirmed",
+        "parsed_amount": 825200,
+        "status": "APPROVED"
+      },
+      "branch_submission": {
+        "manager_phone": "+2347062939869",
+        "manager_handle": "Hon. Olusegun Edun",
+        "raw_caption": "CAR-GO 1",
+        "mapped_branch_id": "BR_CARGO_1",
+        "has_receipt_image": true
+      },
+      "validation_flags": []
+    },
+    {
+      "officer_message_id": "AC5113829648479AB03A2553F8EE75CE",
+      "date": "2026-09-25",
+      "time": "17:00",
+      "bank_officer": {
+        "name": "Abimbola",
+        "phone": "+2348034883525",
+        "bank": "Access Bank",
+        "is_authorized": true
+      },
+      "confirmation": {
+        "raw_text": "N1,455,800. Confirmed",
+        "parsed_amount": 1455800,
+        "status": "APPROVED"
+      },
+      "branch_submission": {
+        "manager_phone": "+2348169435355",
+        "manager_handle": "Relentless",
+        "raw_caption": "LEKKI 4; \n#1,455,800",
+        "mapped_branch_id": "BR_LEKKI_4",
+        "has_receipt_image": true
+      },
+      "validation_flags": []
+    },
+    {
+      "officer_message_id": "ACCFAF4F752A54400B4D56F7D911A46D",
+      "date": "2026-09-25",
+      "time": "17:00",
+      "bank_officer": {
+        "name": "Abimbola",
+        "phone": "+2348034883525",
+        "bank": "Access Bank",
+        "is_authorized": true
+      },
+      "confirmation": {
+        "raw_text": "N696,600. Confirmed",
+        "parsed_amount": 696600,
+        "status": "APPROVED"
+      },
+      "branch_submission": {
+        "manager_phone": "+2348100682694",
+        "manager_handle": "Blessing Jonathan",
+        "raw_caption": "Tollgate",
+        "mapped_branch_id": null,
+        "has_receipt_image": true
+      },
+      "validation_flags": [
+        "UNMAPPED_BRANCH"
+      ]
+    },
+    {
+      "officer_message_id": "AC81F8EC892490FDD17A501235EFDD64",
+      "date": "2026-09-25",
+      "time": "17:01",
+      "bank_officer": {
+        "name": "Abimbola",
+        "phone": "+2348034883525",
+        "bank": "Access Bank",
+        "is_authorized": true
+      },
+      "confirmation": {
+        "raw_text": "N749,900. Confirmed",
+        "parsed_amount": 749900,
+        "status": "APPROVED"
+      },
+      "branch_submission": {
+        "manager_phone": "+2347080373413",
+        "manager_handle": "davidomenka68@gmail.com",
+        "raw_caption": "OGBOMOSO 1",
+        "mapped_branch_id": "BR_OGBOMOSO_1",
+        "has_receipt_image": true
+      },
+      "validation_flags": []
+    },
+    {
+      "officer_message_id": "AC46AD033810D5274C671B929D212149",
+      "date": "2026-09-25",
+      "time": "17:01",
+      "bank_officer": {
+        "name": "Abimbola",
+        "phone": "+2348034883525",
+        "bank": "Access Bank",
+        "is_authorized": true
+      },
+      "confirmation": {
+        "raw_text": "N825,200. Confirmed",
+        "parsed_amount": 825200,
+        "status": "APPROVED"
+      },
+      "branch_submission": {
+        "manager_phone": "+2347062939869",
+        "manager_handle": "Hon. Olusegun Edun",
+        "raw_caption": "CAR-GO 1",
+        "mapped_branch_id": "BR_CARGO_1",
+        "has_receipt_image": true
+      },
+      "validation_flags": []
+    },
+    {
+      "officer_message_id": "ACCFD45752B7CA73B6E924A3D72FD23D",
+      "date": "2026-09-25",
+      "time": "17:02",
+      "bank_officer": {
+        "name": "Abimbola",
+        "phone": "+2348034883525",
+        "bank": "Access Bank",
+        "is_authorized": true
+      },
+      "confirmation": {
+        "raw_text": "N1,456,800. Confirmed",
+        "parsed_amount": 1456800,
+        "status": "APPROVED"
+      },
+      "branch_submission": {
+        "manager_phone": "+2348169435355",
+        "manager_handle": "Relentless",
+        "raw_caption": "LEKKI 4; \n#1,455,800",
+        "mapped_branch_id": "BR_LEKKI_4",
+        "has_receipt_image": true
+      },
+      "validation_flags": []
+    },
+    {
+      "officer_message_id": "ACAC2C5629B12CA44F8200E7EB5C91C8",
+      "date": "2026-09-25",
+      "time": "17:02",
+      "bank_officer": {
+        "name": "Abimbola",
+        "phone": "+2348034883525",
+        "bank": "Access Bank",
+        "is_authorized": true
+      },
+      "confirmation": {
+        "raw_text": "N696,600. Confirmed",
+        "parsed_amount": 696600,
+        "status": "APPROVED"
+      },
+      "branch_submission": {
+        "manager_phone": "+2348100682694",
+        "manager_handle": "Blessing Jonathan",
+        "raw_caption": "Tollgate",
+        "mapped_branch_id": null,
+        "has_receipt_image": true
+      },
+      "validation_flags": [
+        "UNMAPPED_BRANCH"
+      ]
+    },
+    {
+      "officer_message_id": "AC082A5664EEECAB7695424BC3A8D154",
+      "date": "2026-09-25",
+      "time": "17:03",
+      "bank_officer": {
+        "name": "Abimbola",
+        "phone": "+2348034883525",
+        "bank": "Access Bank",
+        "is_authorized": true
+      },
+      "confirmation": {
+        "raw_text": "N230,660. Confirmed",
+        "parsed_amount": 230660,
+        "status": "APPROVED"
+      },
+      "branch_submission": {
+        "manager_phone": "+2349018896657",
+        "manager_handle": "PRINCE DEMOLA",
+        "raw_caption": "OGBOMOSO 2",
+        "mapped_branch_id": null,
+        "has_receipt_image": true
+      },
+      "validation_flags": [
+        "UNMAPPED_BRANCH"
+      ]
+    },
+    {
+      "officer_message_id": "AC283E9859889FA92E6541179EC4EA82",
+      "date": "2026-09-25",
+      "time": "17:03",
+      "bank_officer": {
+        "name": "Abimbola",
+        "phone": "+2348034883525",
+        "bank": "Access Bank",
+        "is_authorized": true
+      },
+      "confirmation": {
+        "raw_text": "N1,286,220. Confirmed",
+        "parsed_amount": 1286220,
+        "status": "APPROVED"
+      },
+      "branch_submission": {
+        "manager_phone": "+2347035351168",
+        "manager_handle": "Debo",
+        "raw_caption": "Monatan \n1,286,220",
+        "mapped_branch_id": null,
+        "has_receipt_image": true
+      },
+      "validation_flags": [
+        "UNMAPPED_BRANCH"
+      ]
+    },
+    {
+      "officer_message_id": "AC1E26B07157CE41D0C080655D5D8F4D",
+      "date": "2026-09-25",
+      "time": "17:04",
+      "bank_officer": {
+        "name": "Abimbola",
+        "phone": "+2348034883525",
+        "bank": "Access Bank",
+        "is_authorized": true
+      },
+      "confirmation": {
+        "raw_text": "N1,652,200. Confirmed",
+        "parsed_amount": 1652200,
+        "status": "APPROVED"
+      },
+      "branch_submission": {
+        "manager_phone": "+2347069038671",
+        "manager_handle": "Kyle",
+        "raw_caption": "Sagamu 2",
+        "mapped_branch_id": null,
+        "has_receipt_image": true
+      },
+      "validation_flags": [
+        "UNMAPPED_BRANCH"
+      ]
+    },
+    {
+      "officer_message_id": "AC96D626D9A986C627825EE706B23CC5",
+      "date": "2026-09-25",
+      "time": "17:04",
+      "bank_officer": {
+        "name": "Abimbola",
+        "phone": "+2348034883525",
+        "bank": "Access Bank",
+        "is_authorized": true
+      },
+      "confirmation": {
+        "raw_text": "N889,500. Confirmed",
+        "parsed_amount": 889500,
+        "status": "APPROVED"
+      },
+      "branch_submission": {
+        "manager_phone": "+2348029929255",
+        "manager_handle": "ABIMBOLA",
+        "raw_caption": "IFEROAD1=889,500",
+        "mapped_branch_id": null,
+        "has_receipt_image": true
+      },
+      "validation_flags": [
+        "UNMAPPED_BRANCH"
+      ]
+    },
+    {
+      "officer_message_id": "ACCB26E726248133CA9CAE075E56FB78",
+      "date": "2026-09-25",
+      "time": "17:05",
+      "bank_officer": {
+        "name": "Abimbola",
+        "phone": "+2348034883525",
+        "bank": "Access Bank",
+        "is_authorized": true
+      },
+      "confirmation": {
+        "raw_text": "N1,130,000. Confirmed",
+        "parsed_amount": 1130000,
+        "status": "APPROVED"
+      },
+      "branch_submission": {
+        "manager_phone": "+2348166236126",
+        "manager_handle": "Itunu",
+        "raw_caption": "Olorunsogo",
+        "mapped_branch_id": null,
+        "has_receipt_image": true
+      },
+      "validation_flags": [
+        "UNMAPPED_BRANCH"
+      ]
+    },
+    {
+      "officer_message_id": "ACA649E84DD91F6196CE0C3F98282AE2",
+      "date": "2026-09-25",
+      "time": "17:05",
+      "bank_officer": {
+        "name": "Abimbola",
+        "phone": "+2348034883525",
+        "bank": "Access Bank",
+        "is_authorized": true
+      },
+      "confirmation": {
+        "raw_text": "N820,200. Confirmed",
+        "parsed_amount": 820200,
+        "status": "APPROVED"
+      },
+      "branch_submission": {
+        "manager_phone": "+2347063250572",
+        "manager_handle": "ADENIJI ADUNOLA",
+        "raw_caption": "Ijebu ode 2",
+        "mapped_branch_id": null,
+        "has_receipt_image": true
+      },
+      "validation_flags": [
+        "UNMAPPED_BRANCH"
+      ]
+    },
+    {
+      "officer_message_id": "AC6CA0D5FA215559515AE51D12C686AB",
+      "date": "2026-09-25",
+      "time": "17:05",
+      "bank_officer": {
+        "name": "Abimbola",
+        "phone": "+2348034883525",
+        "bank": "Access Bank",
+        "is_authorized": true
+      },
+      "confirmation": {
+        "raw_text": "N979,200. Confirmed",
+        "parsed_amount": 979200,
+        "status": "APPROVED"
+      },
+      "branch_submission": {
+        "manager_phone": "",
+        "manager_handle": "HR SGR",
+        "raw_caption": "Akodo Station\n=N=979,200",
+        "mapped_branch_id": null,
+        "has_receipt_image": true
+      },
+      "validation_flags": [
+        "UNMAPPED_BRANCH"
+      ]
+    },
+    {
+      "officer_message_id": "AC584A059E6FC4E8542DA601AC46E9A1",
+      "date": "2026-09-25",
+      "time": "17:06",
+      "bank_officer": {
+        "name": "Abimbola",
+        "phone": "+2348034883525",
+        "bank": "Access Bank",
+        "is_authorized": true
+      },
+      "confirmation": {
+        "raw_text": "N1,713,600. Confirmed",
+        "parsed_amount": 1713600,
+        "status": "APPROVED"
+      },
+      "branch_submission": {
+        "manager_phone": "+2349044958279",
+        "manager_handle": "mikekay0328",
+        "raw_caption": "Ijebu ode1",
+        "mapped_branch_id": null,
+        "has_receipt_image": true
+      },
+      "validation_flags": [
+        "UNMAPPED_BRANCH"
+      ]
+    },
+    {
+      "officer_message_id": "ACE0D7212CC8724316C59EC8D05066FA",
+      "date": "2026-09-25",
+      "time": "17:06",
+      "bank_officer": {
+        "name": "Abimbola",
+        "phone": "+2348034883525",
+        "bank": "Access Bank",
+        "is_authorized": true
+      },
+      "confirmation": {
+        "raw_text": "N1,417,600. Confirmed",
+        "parsed_amount": 1417600,
+        "status": "APPROVED"
+      },
+      "branch_submission": {
+        "manager_phone": "+2347069557334",
+        "manager_handle": "tenny4real1984",
+        "raw_caption": "Olomi 2",
+        "mapped_branch_id": null,
+        "has_receipt_image": true
+      },
+      "validation_flags": [
+        "UNMAPPED_BRANCH"
+      ]
+    },
+    {
+      "officer_message_id": "ACE9AFC5FB77C000963EE7F28DF3C3FF",
+      "date": "2026-09-25",
+      "time": "17:07",
+      "bank_officer": {
+        "name": "Abimbola",
+        "phone": "+2348034883525",
+        "bank": "Access Bank",
+        "is_authorized": true
+      },
+      "confirmation": {
+        "raw_text": "N3,085,050. Confirmed",
+        "parsed_amount": 3085050,
+        "status": "APPROVED"
+      },
+      "branch_submission": {
+        "manager_phone": "+2347066364245",
+        "manager_handle": "Prince Arun",
+        "raw_caption": "Imota2 . 3,085,050",
+        "mapped_branch_id": null,
+        "has_receipt_image": true
+      },
+      "validation_flags": [
+        "UNMAPPED_BRANCH"
+      ]
+    },
+    {
+      "officer_message_id": "AC30F2FF53C6C991D11EB34AC85A7D7E",
+      "date": "2026-09-25",
+      "time": "17:07",
+      "bank_officer": {
+        "name": "Abimbola",
+        "phone": "+2348034883525",
+        "bank": "Access Bank",
+        "is_authorized": true
+      },
+      "confirmation": {
+        "raw_text": "N584,850. Confirmed",
+        "parsed_amount": 584850,
+        "status": "APPROVED"
+      },
+      "branch_submission": {
+        "manager_phone": "+2348068693767",
+        "manager_handle": "Donald Nwankwo",
+        "raw_caption": "Olomi 1 Bank payment for 24.09.2026.pdf • 1 page",
+        "mapped_branch_id": null,
+        "has_receipt_image": true
+      },
+      "validation_flags": [
+        "UNMAPPED_BRANCH"
+      ]
+    },
+    {
+      "officer_message_id": "ACE7DC0F747DE1634A2290B735368C04",
+      "date": "2026-09-25",
+      "time": "17:08",
+      "bank_officer": {
+        "name": "Abimbola",
+        "phone": "+2348034883525",
+        "bank": "Access Bank",
+        "is_authorized": true
+      },
+      "confirmation": {
+        "raw_text": "N1,215,500. Confirmed",
+        "parsed_amount": 1215500,
+        "status": "APPROVED"
+      },
+      "branch_submission": {
+        "manager_phone": "+2347037064054",
+        "manager_handle": "Ebby",
+        "raw_caption": "APATA 1,215,500",
+        "mapped_branch_id": null,
+        "has_receipt_image": true
+      },
+      "validation_flags": [
+        "UNMAPPED_BRANCH"
+      ]
+    },
+    {
+      "officer_message_id": "ACBB6EBBBBCC8AA62902FE48254F0852",
+      "date": "2026-09-25",
+      "time": "17:08",
+      "bank_officer": {
+        "name": "Abimbola",
+        "phone": "+2348034883525",
+        "bank": "Access Bank",
+        "is_authorized": true
+      },
+      "confirmation": {
+        "raw_text": "N1,500,000. Confirmed",
+        "parsed_amount": 1500000,
+        "status": "APPROVED"
+      },
+      "branch_submission": {
+        "manager_phone": "+2348138146855",
+        "manager_handle": "Seyifly",
+        "raw_caption": "Sango Tollgate bank deposit",
+        "mapped_branch_id": null,
+        "has_receipt_image": true
+      },
+      "validation_flags": [
+        "UNMAPPED_BRANCH"
+      ]
+    },
+    {
+      "officer_message_id": "AC1E1AE69B7E91D44EF6CF9111E4C4C4",
+      "date": "2026-09-25",
+      "time": "17:09",
+      "bank_officer": {
+        "name": "Abimbola",
+        "phone": "+2348034883525",
+        "bank": "Access Bank",
+        "is_authorized": true
+      },
+      "confirmation": {
+        "raw_text": "N2,208,100. Confirmed",
+        "parsed_amount": 2208100,
+        "status": "APPROVED"
+      },
+      "branch_submission": {
+        "manager_phone": "+2348139253104",
+        "manager_handle": "Afolabi Mubarak",
+        "raw_caption": "2,208,100\nOGIJO",
+        "mapped_branch_id": null,
+        "has_receipt_image": true
+      },
+      "validation_flags": [
+        "UNMAPPED_BRANCH"
+      ]
+    },
+    {
+      "officer_message_id": "ACD023C6BB6FE8249A75AEDE54EB3A94",
+      "date": "2026-09-25",
+      "time": "17:09",
+      "bank_officer": {
+        "name": "Abimbola",
+        "phone": "+2348034883525",
+        "bank": "Access Bank",
+        "is_authorized": true
+      },
+      "confirmation": {
+        "raw_text": "N180,000. Confirmed",
+        "parsed_amount": 180000,
+        "status": "APPROVED"
+      },
+      "branch_submission": {
+        "manager_phone": "+2348064220606",
+        "manager_handle": "Akeem Olaitan Shittu",
+        "raw_caption": "Photo",
+        "mapped_branch_id": null,
+        "has_receipt_image": true
+      },
+      "validation_flags": [
+        "UNMAPPED_BRANCH"
+      ]
+    },
+    {
+      "officer_message_id": "AC65B7F409A64AA35E3159A758F95AA7",
+      "date": "2026-09-25",
+      "time": "17:10",
+      "bank_officer": {
+        "name": "Abimbola",
+        "phone": "+2348034883525",
+        "bank": "Access Bank",
+        "is_authorized": true
+      },
+      "confirmation": {
+        "raw_text": "N3,927,000. Confirmed",
+        "parsed_amount": 3927000,
+        "status": "APPROVED"
+      },
+      "branch_submission": {
+        "manager_phone": "+2348035016257",
+        "manager_handle": "Babatunde Adeyemo",
+        "raw_caption": "Photo",
+        "mapped_branch_id": null,
+        "has_receipt_image": true
+      },
+      "validation_flags": [
+        "UNMAPPED_BRANCH"
+      ]
+    },
+    {
+      "officer_message_id": "AC9CC364063045E3EB3FE9998E144AE4",
+      "date": "2026-09-25",
+      "time": "17:10",
+      "bank_officer": {
+        "name": "Abimbola",
+        "phone": "+2348034883525",
+        "bank": "Access Bank",
+        "is_authorized": true
+      },
+      "confirmation": {
+        "raw_text": "N1,947,650. Confirmed",
+        "parsed_amount": 1947650,
+        "status": "APPROVED"
+      },
+      "branch_submission": {
+        "manager_phone": "+2349155635023",
+        "manager_handle": "Omotayo",
+        "raw_caption": "AGODI GATE……1,947,650",
+        "mapped_branch_id": null,
+        "has_receipt_image": true
+      },
+      "validation_flags": [
+        "UNMAPPED_BRANCH"
+      ]
+    },
+    {
+      "officer_message_id": "AC479D47434992E99EAC3A8FA96FE22C",
+      "date": "2026-09-25",
+      "time": "17:11",
+      "bank_officer": {
+        "name": "Abimbola",
+        "phone": "+2348034883525",
+        "bank": "Access Bank",
+        "is_authorized": true
+      },
+      "confirmation": {
+        "raw_text": "N3,576,900. Confirmed",
+        "parsed_amount": 3576900,
+        "status": "APPROVED"
+      },
+      "branch_submission": {
+        "manager_phone": "+2349076345569",
+        "manager_handle": "ibrahimolushola129",
+        "raw_caption": "Photo",
+        "mapped_branch_id": null,
+        "has_receipt_image": true
+      },
+      "validation_flags": [
+        "UNMAPPED_BRANCH"
+      ]
+    }
+  ]
+}

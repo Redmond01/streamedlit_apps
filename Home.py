@@ -83,7 +83,7 @@ def render_home_dashboard() -> None:
     st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
     st.markdown("#### 💳 POS & Bank Reconciliation")
 
-    col3, col4, col5 = st.columns(3)
+    col3, col4 = st.columns(2)
 
     with col3:
         st.markdown(
@@ -127,6 +127,9 @@ def render_home_dashboard() -> None:
             unsafe_allow_html=True,
         )
 
+    st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
+    col5, col6 = st.columns(2)
+
     with col5:
         st.markdown(
             """
@@ -142,6 +145,27 @@ def render_home_dashboard() -> None:
                     <li>Automatic report date inference</li>
                     <li>Detailed match statistics</li>
                     <li>Hover comments with POS error details</li>
+                </ul>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with col6:
+        st.markdown(
+            """
+            <div style="background: #1e293b; padding: 1.25rem; border-radius: 8px; border: 1px solid #334155; height: 100%;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <span style="font-size: 1.5rem;">💵</span>
+                    <h4 style="margin: 0; color: #38bdf8;">Bank Lodgment</h4>
+                </div>
+                <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 12px;">
+                    Automated ingestion of bank deposit confirmations into the master lodgment workbook, matching stations via multi-signal resolution and preserving formulas.
+                </p>
+                <ul style="color: #cbd5e1; font-size: 0.85rem; padding-left: 20px;">
+                    <li>Automatic manager phone & branch resolution</li>
+                    <li>Deduplicates identical WhatsApp confirmations</li>
+                    <li>Preserves Zenith rows and SUMMARY sheet links</li>
                 </ul>
             </div>
             """,

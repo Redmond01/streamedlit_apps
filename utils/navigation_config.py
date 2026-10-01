@@ -45,5 +45,10 @@ NAVIGATION_CONFIG = {
             "title": "Bank Statement POS Loader",   # <-- Edit your display title here!
             "icon": "🏦",
         },
+        {
+            "target": "pages/6_🏦_Bank_Lodgment.py",
+            "title": "Bank Lodgment",               # <-- Edit your display title here!
+            "icon": "💵",
+        },
     ],
 }

@@ -64,7 +64,7 @@ with st.form("cashbook_extractor_form"):
         min_number = st.number_input(
             "Minimum POS Number (Skip SGR/OBX below this)",
             min_value=1,
-            value=11,
+            value=2,
             help="Skips POS 1-10 for SGR and OBX to avoid inconsistent legacy labels.",
         )
         target_day_val = st.text_input(
