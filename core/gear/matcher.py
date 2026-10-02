@@ -101,14 +101,25 @@ def _normalize_station_name(value: str) -> str:
     text = value.upper()
     text = re.sub(r"\.XLSX?$|\.XLSM$", " ", text)
     text = re.sub(r"\(([^)]*)\)", _parenthetical_station_text, text)
-    text = re.sub(r"\bJUNE\b|\bJULY\b|\bAUGUST\b|\bSEPTEMBER\b", " ", text)
+    # Strip all calendar month names and common abbreviations
+    months_pat = (
+        r"\b(JANUARY|FEBRUARY|MARCH|APRIL|MAY|JUNE|JULY|AUGUST|SEPTEMBER|OCTOBER|NOVEMBER|DECEMBER|"
+        r"JAN|FEB|MAR|APR|JUN|JUL|AUG|SEP|SEPT|OCT|NOV|DEC)\b"
+    )
+    text = re.sub(months_pat, " ", text)
+    # Strip 4-digit years (e.g. 2024, 2025, 2026, 2027)
+    text = re.sub(r"\b20\d{2}\b", " ", text)
     text = text.replace("TOLL GATE", "TOLLGATE")
+    # Insert space if station suffix is attached directly to digit (e.g. '1sgr' -> '1 sgr')
+    text = re.sub(r"(\d+)(SGR|OBX|TA|AGS)", r"\1 \2", text)
     text = re.sub(r"\b(SGR|OBX|TA|AGS)\b", " ", text)
     text = re.sub(r"\bGATE\b", " ", text)
     text = re.sub(r"\bODE\b", " ", text)
     text = re.sub(r"\bROAD\b", " ", text)
     text = text.replace("OGBOMOSHO", "OGBOMOSO")
     text = text.replace("IJEBUODE", "IJEBU")
+    # Canonical station spelling aliases:
+    text = text.replace("SAAPADE", "SAPADE").replace("SHAPADE", "SAPADE")
     text = re.sub(r"[^A-Z0-9]+", " ", text)
     return re.sub(r"\s+", " ", text).strip()
 

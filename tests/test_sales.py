@@ -107,6 +107,31 @@ class TestSalesMatcher(unittest.TestCase):
         self.assertEqual(col, 5)
         self.assertEqual(name, "SAAPADE")
 
+        # Match October Shapade to Saapade header
+        col, name, score = match_station_column("OCTOBER Shapade sgr.xlsx", col_map)
+        self.assertEqual(col, 5)
+        self.assertEqual(name, "SAAPADE")
+        self.assertGreaterEqual(score, 1.0)
+
+    def test_inverted_date_resolution(self):
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Day1"
+        # 01/10/2026 entered in mm-dd-yy format parsed by Excel as Jan 10 (2026-01-10)
+        ws["A1"] = datetime(2026, 1, 10, 0, 0)
+
+        # Extracted with October filename
+        d = extract_date_from_sheet(ws, filename="OCTOBER Ogere 1 sgr.xlsx")
+        self.assertEqual(d, date(2026, 10, 1))
+
+        # Extracted with target_date
+        d2 = extract_date_from_sheet(ws, target_date=date(2026, 10, 1))
+        self.assertEqual(d2, date(2026, 10, 1))
+
+        # Extracted with expected_month
+        d3 = extract_date_from_sheet(ws, expected_month=10)
+        self.assertEqual(d3, date(2026, 10, 1))
+
     def test_date_row_mapping(self):
         wb = openpyxl.Workbook()
         ws = wb.active

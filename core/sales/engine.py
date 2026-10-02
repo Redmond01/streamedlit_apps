@@ -78,6 +78,15 @@ def process_sales_batch(
         ago_dates = build_date_row_map(ago_ws)
         lpg_dates = build_date_row_map(lpg_ws) if lpg_ws else {}
 
+        # Determine expected month from target_date or master sheet dates
+        expected_month: int | None = None
+        if config.target_date:
+            expected_month = config.target_date.month
+        elif pms_dates:
+            expected_month = next(iter(pms_dates.keys())).month
+        elif ago_dates:
+            expected_month = next(iter(ago_dates.keys())).month
+
         total_files = len(source_files)
 
         for idx, src_file in enumerate(source_files):
@@ -89,7 +98,12 @@ def process_sales_batch(
             src_wb = None
             try:
                 src_wb = openpyxl.load_workbook(src_path, data_only=True)
-                records = extract_station_sales_records(src_wb, filename, config)
+                records = extract_station_sales_records(
+                    src_wb,
+                    filename,
+                    config,
+                    expected_month=expected_month,
+                )
 
                 if not records:
                     skipped_count += 1
@@ -132,16 +146,23 @@ def process_sales_batch(
 
                 # Process each day record for this station
                 for rec in records:
-                    date_str = rec.date.strftime("%Y-%m-%d")
+                    notes: list[str] = []
+                    actual_date = rec.date
+                    if actual_date not in pms_dates and 1 <= actual_date.day <= 12 and 1 <= actual_date.month <= 12:
+                        swapped = date(actual_date.year, actual_date.day, actual_date.month)
+                        if swapped in pms_dates or swapped in ago_dates or swapped in lpg_dates:
+                            actual_date = swapped
+                            notes.append(f"Inverted date {rec.date} auto-corrected to {swapped}")
+
+                    date_str = actual_date.strftime("%Y-%m-%d")
                     target_cols_desc: list[str] = []
                     status_desc = "Preview" if dry_run else "Written"
-                    notes: list[str] = []
 
                     # 1. PMS Sales Write
                     if rec.pms is not None:
                         total_pms_litres += rec.pms
                         if pms_col is not None:
-                            row_idx = pms_dates.get(rec.date)
+                            row_idx = pms_dates.get(actual_date)
                             if row_idx is not None:
                                 if not dry_run:
                                     pms_ws.cell(row_idx, pms_col).value = decimal_to_excel(rec.pms)
@@ -156,7 +177,7 @@ def process_sales_batch(
                     if rec.ago is not None:
                         total_ago_litres += rec.ago
                         if ago_col is not None:
-                            row_idx = ago_dates.get(rec.date)
+                            row_idx = ago_dates.get(actual_date)
                             if row_idx is not None:
                                 if not dry_run:
                                     ago_ws.cell(row_idx, ago_col).value = decimal_to_excel(rec.ago)
@@ -171,7 +192,7 @@ def process_sales_batch(
                     if rec.lpg is not None:
                         total_lpg_kg += rec.lpg
                         if lpg_col is not None and lpg_ws is not None:
-                            row_idx = lpg_dates.get(rec.date)
+                            row_idx = lpg_dates.get(actual_date)
                             if row_idx is not None:
                                 if not dry_run:
                                     lpg_ws.cell(row_idx, lpg_col).value = decimal_to_excel(rec.lpg)
@@ -182,7 +203,7 @@ def process_sales_batch(
                         else:
                             notes.append("No LPG column matched")
 
-                    msg = "; ".join(notes) if notes else f"Matched (score={pms_score:.2f})"
+                    msg = "; ".join(notes) if notes else f"Matched (score={max(pms_score, ago_score, lpg_score):.2f})"
                     logs.append({
                         "file": filename,
                         "station": matched_station_name,

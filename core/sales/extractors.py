@@ -28,46 +28,140 @@ class DailySalesRecord:
     lpg: Decimal | None
 
 
-def extract_date_from_sheet(sheet: Worksheet) -> date | None:
-    """Extracts calendar date from daily station worksheet."""
+MONTH_NAME_TO_INT: dict[str, int] = {
+    "JANUARY": 1, "JAN": 1,
+    "FEBRUARY": 2, "FEB": 2,
+    "MARCH": 3, "MAR": 3,
+    "APRIL": 4, "APR": 4,
+    "MAY": 5,
+    "JUNE": 6, "JUN": 6,
+    "JULY": 7, "JUL": 7,
+    "AUGUST": 8, "AUG": 8,
+    "SEPTEMBER": 9, "SEP": 9, "SEPT": 9,
+    "OCTOBER": 10, "OCT": 10,
+    "NOVEMBER": 11, "NOV": 11,
+    "DECEMBER": 12, "DEC": 12,
+}
+
+
+def resolve_inverted_date(
+    d: date,
+    filename: str | None = None,
+    target_date: date | None = None,
+    expected_month: int | None = None,
+) -> date:
+    """Detects and corrects dates where Day and Month were inverted by Excel.
+
+    For example, typing '01/10/2026' into a sheet with mm-dd-yy format causes Excel
+    to store it as 2026-01-10 (Jan 10) instead of 2026-10-01 (Oct 1).
+    """
+    if not isinstance(d, date):
+        return d
+
+    # 1. Exact match with target_date when day & month are swapped
+    if target_date and d.year == target_date.year:
+        if d.day == target_date.month and d.month == target_date.day:
+            return target_date
+
+    # 2. Determine target month from expected_month or filename
+    inferred_month = expected_month
+    if inferred_month is None and target_date:
+        inferred_month = target_date.month
+    if inferred_month is None and filename:
+        fn_upper = filename.upper()
+        for mname, mnum in MONTH_NAME_TO_INT.items():
+            if re.search(r"\b" + mname + r"\b", fn_upper):
+                inferred_month = mnum
+                break
+
+    # 3. If date's month does not match inferred month, but day does, swap them
+    if inferred_month and d.month != inferred_month:
+        if d.day == inferred_month and 1 <= d.month <= 12:
+            try:
+                corrected = date(d.year, d.day, d.month)
+                logger.info(
+                    "Corrected inverted date from %s to %s (inferred month: %d, file: %s)",
+                    d, corrected, inferred_month, filename
+                )
+                return corrected
+            except ValueError:
+                pass
+
+    return d
+
+
+def extract_date_from_sheet(
+    sheet: Worksheet,
+    filename: str | None = None,
+    target_date: date | None = None,
+    expected_month: int | None = None,
+) -> date | None:
+    """Extracts calendar date from daily station worksheet, resolving inverted dates."""
     max_r = min(sheet.max_row or 10, 8)
     max_c = min(sheet.max_column or 15, 12)
+
+    raw_date: date | None = None
 
     # Pass 1: Direct datetime/date objects in top rows
     for r in range(1, max_r + 1):
         for c in range(1, max_c + 1):
             val = sheet.cell(r, c).value
             if isinstance(val, (datetime, date)):
-                return val.date() if isinstance(val, datetime) else val
+                raw_date = val.date() if isinstance(val, datetime) else val
+                break
+        if raw_date:
+            break
 
     # Pass 2: Look for 'DATE' label
-    for r in range(1, max_r + 1):
-        for c in range(1, max_c + 1):
-            val = str(sheet.cell(r, c).value or "").strip().upper()
-            if val in {"DATE", "DATE:", "TRANS DATE", "TRANS DATE:"}:
-                for check_cell in [
-                    sheet.cell(r, c + 1).value,
-                    sheet.cell(r + 1, c).value,
-                    sheet.cell(r, c + 2).value,
-                ]:
-                    if isinstance(check_cell, (datetime, date)):
-                        return check_cell.date() if isinstance(check_cell, datetime) else check_cell
-                    if isinstance(check_cell, str):
-                        parsed = _parse_date_str(check_cell)
-                        if parsed:
-                            return parsed
+    if not raw_date:
+        for r in range(1, max_r + 1):
+            for c in range(1, max_c + 1):
+                val = str(sheet.cell(r, c).value or "").strip().upper()
+                if val in {"DATE", "DATE:", "TRANS DATE", "TRANS DATE:"}:
+                    for check_cell in [
+                        sheet.cell(r, c + 1).value,
+                        sheet.cell(r + 1, c).value,
+                        sheet.cell(r, c + 2).value,
+                    ]:
+                        if isinstance(check_cell, (datetime, date)):
+                            raw_date = check_cell.date() if isinstance(check_cell, datetime) else check_cell
+                            break
+                        if isinstance(check_cell, str):
+                            parsed = _parse_date_str(check_cell)
+                            if parsed:
+                                raw_date = parsed
+                                break
+                    if raw_date:
+                        break
+            if raw_date:
+                break
 
     # Pass 3: Regex string matching across top cells
-    for r in range(1, max_r + 1):
-        for c in range(1, max_c + 1):
-            val = sheet.cell(r, c).value
-            if isinstance(val, str):
-                parsed = _parse_date_str(val)
-                if parsed:
-                    return parsed
+    if not raw_date:
+        for r in range(1, max_r + 1):
+            for c in range(1, max_c + 1):
+                val = sheet.cell(r, c).value
+                if isinstance(val, str):
+                    parsed = _parse_date_str(val)
+                    if parsed:
+                        raw_date = parsed
+                        break
+            if raw_date:
+                break
 
     # Pass 4: Fallback to sheet title
-    return _parse_date_str(sheet.title)
+    if not raw_date:
+        raw_date = _parse_date_str(sheet.title)
+
+    if raw_date:
+        return resolve_inverted_date(
+            raw_date,
+            filename=filename,
+            target_date=target_date,
+            expected_month=expected_month,
+        )
+
+    return None
 
 
 def _parse_date_str(text: str) -> date | None:
@@ -144,6 +238,7 @@ def extract_station_sales_records(
     workbook: Workbook,
     filename: str,
     config: SalesConfig,
+    expected_month: int | None = None,
 ) -> list[DailySalesRecord]:
     """Extracts daily sales records from a station workbook based on config sync mode."""
     visible_sheets = [s for s in workbook.worksheets if s.sheet_state != "hidden"]
@@ -159,7 +254,12 @@ def extract_station_sales_records(
             target_sheets = [visible_sheets[-1]]
     elif config.sync_mode == "specific_date":
         for s in visible_sheets:
-            d = extract_date_from_sheet(s)
+            d = extract_date_from_sheet(
+                s,
+                filename=filename,
+                target_date=config.target_date,
+                expected_month=expected_month,
+            )
             if d and d == config.target_date:
                 target_sheets.append(s)
         if not target_sheets:
@@ -170,7 +270,12 @@ def extract_station_sales_records(
 
     records: list[DailySalesRecord] = []
     for ws in target_sheets:
-        d = extract_date_from_sheet(ws)
+        d = extract_date_from_sheet(
+            ws,
+            filename=filename,
+            target_date=config.target_date,
+            expected_month=expected_month,
+        )
         if not d:
             logger.warning("Could not resolve date for sheet %s in %s", ws.title, filename)
             continue
