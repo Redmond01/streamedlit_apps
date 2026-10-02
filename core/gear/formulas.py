@@ -67,7 +67,7 @@ def build_total_formulas(sheet: Worksheet, config: GearConfig) -> list[dict[str,
             f"={col_letter}{config.sales_meter_row}-{col_letter}{config.sales_dipping_row}"
         )
         sheet.cell(config.expected_gear_row, col_idx).value = (
-            f"={col_letter}{config.sales_meter_row}*0.085"
+            f"={col_letter}{config.sales_meter_row}*0.0775"
         )
         sheet.cell(config.gear_percent_row, col_idx).value = (
             f"={col_letter}{config.actual_gear_row}/{col_letter}{config.expected_gear_row}*100"
