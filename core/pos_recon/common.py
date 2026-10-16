@@ -4,6 +4,22 @@ from datetime import datetime, timedelta
 import re
 from typing import Any
 
+from openpyxl.cell.cell import Cell, MergedCell
+
+
+def get_writable_cell(ws: Any, row: int, col: int) -> Cell:
+    """Returns a writable openpyxl Cell for (row, col).
+
+    If the cell at (row, col) is a MergedCell (which is read-only), this resolves
+    to the top-left master cell of the merged range.
+    """
+    cell = ws.cell(row, col)
+    if isinstance(cell, MergedCell):
+        for rng in ws.merged_cells.ranges:
+            if rng.min_row <= row <= rng.max_row and rng.min_col <= col <= rng.max_col:
+                return ws.cell(rng.min_row, rng.min_col)
+    return cell
+
 
 def cell_date_to_text(value: Any) -> str:
     """Converts a cell date value (datetime, Excel serial number, or string) to ISO YYYY-MM-DD string."""

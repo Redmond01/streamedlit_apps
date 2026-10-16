@@ -109,3 +109,36 @@ def test_eod_sync_integration():
     finally:
         cleanup_files(eod_path)
 
+
+def test_get_writable_cell_with_merged_range():
+    import openpyxl
+    from openpyxl.cell.cell import Cell, MergedCell
+    from core.pos_recon.common import get_writable_cell
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    # Merge B1:D2
+    ws.merge_cells("B1:D2")
+    ws["B1"] = "Master Date"
+
+    # B1 is normal Cell
+    cell_b1 = get_writable_cell(ws, 1, 2)
+    assert isinstance(cell_b1, Cell)
+    assert not isinstance(cell_b1, MergedCell)
+    assert cell_b1.coordinate == "B1"
+
+    # C1 is a MergedCell, must resolve to master cell B1
+    assert isinstance(ws.cell(1, 3), MergedCell)
+    cell_c1 = get_writable_cell(ws, 1, 3)
+    assert isinstance(cell_c1, Cell)
+    assert not isinstance(cell_c1, MergedCell)
+    assert cell_c1.coordinate == "B1"
+
+    # D2 is a MergedCell, must also resolve to master cell B1
+    assert isinstance(ws.cell(2, 4), MergedCell)
+    cell_d2 = get_writable_cell(ws, 2, 4)
+    assert cell_d2.coordinate == "B1"
+    cell_d2.value = "Updated"
+    assert ws["B1"].value == "Updated"
+
+

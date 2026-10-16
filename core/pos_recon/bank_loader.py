@@ -10,7 +10,7 @@ import openpyxl
 from openpyxl.comments import Comment
 
 from core.memory import cleanup_files, force_gc, spool_uploaded_file
-from .common import choose_block, find_report_blocks, normalize_pos, parse_money
+from .common import choose_block, find_report_blocks, get_writable_cell, normalize_pos, parse_money
 
 
 def parse_records(payload: Any) -> list[dict[str, Any]]:
@@ -118,7 +118,7 @@ def load_json_to_workbook(
                 continue
 
             matched += 1
-            cell = ws.cell(row, block["bank_col"])
+            cell = get_writable_cell(ws, row, block["bank_col"])
             status = str(record.get("status") or "").upper()
 
             if status == "OK":

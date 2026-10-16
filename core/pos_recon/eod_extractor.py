@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+import logging
 from pathlib import Path
 import tempfile
 from typing import Any
@@ -13,9 +14,12 @@ from .common import (
     cell_date_to_text,
     choose_block,
     find_report_blocks,
+    get_writable_cell,
     normalize_pos,
     parse_money,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def daily_pos_sheet_name(date_str: str) -> str:
@@ -168,17 +172,25 @@ def write_eod_to_workbook(
         mapped_rows = []
 
         try:
-            ws.cell(1, block["bank_col"]).value = datetime.fromisoformat(date_str)
-            ws.cell(1, block["bank_col"]).number_format = "yyyy-mm-dd"
-        except Exception:
-            ws.cell(1, block["bank_col"]).value = date_str
+            date_cell = get_writable_cell(ws, 1, block["bank_col"])
+            try:
+                date_cell.value = datetime.fromisoformat(date_str)
+                date_cell.number_format = "yyyy-mm-dd"
+            except Exception:
+                date_cell.value = date_str
+        except Exception as exc:
+            logger.warning("Could not update cosmetic date in row 1 for block: %s", exc)
 
         for row in range(5, data_end_row + 1):
-            ws.cell(row, block["cashbook_col"]).value = None
-            ws.cell(row, block["bank_col"]).value = None
-            ws.cell(row, block["difference_col"]).value = (
-                f"=SUM({ws.cell(row, block['cashbook_col']).coordinate}-"
-                f"{ws.cell(row, block['bank_col']).coordinate})"
+            cb_cell = get_writable_cell(ws, row, block["cashbook_col"])
+            bk_cell = get_writable_cell(ws, row, block["bank_col"])
+            df_cell = get_writable_cell(ws, row, block["difference_col"])
+
+            cb_cell.value = None
+            bk_cell.value = None
+            df_cell.value = (
+                f"=SUM({cb_cell.coordinate}-"
+                f"{bk_cell.coordinate})"
             )
 
             pos = normalize_pos(ws.cell(row, block["terminal_col"]).value)
@@ -186,8 +198,8 @@ def write_eod_to_workbook(
                 continue
 
             amount = extracted["amountByPos"][pos]
-            ws.cell(row, block["cashbook_col"]).value = amount
-            ws.cell(row, block["cashbook_col"]).number_format = "#,##0.00"
+            cb_cell.value = amount
+            cb_cell.number_format = "#,##0.00"
             mapped_rows.append({
                 "row": row,
                 "workbookPos": ws.cell(row, block["terminal_col"]).value,
@@ -196,11 +208,15 @@ def write_eod_to_workbook(
             })
             unmatched.discard(pos)
 
-        ws.cell(total_row, block["cashbook_col"]).value = f"=SUM({ws.cell(5, block['cashbook_col']).coordinate}:{ws.cell(data_end_row, block['cashbook_col']).coordinate})"
-        ws.cell(total_row, block["bank_col"]).value = f"=SUM({ws.cell(5, block['bank_col']).coordinate}:{ws.cell(data_end_row, block['bank_col']).coordinate})"
-        ws.cell(total_row, block["difference_col"]).value = (
-            f"=SUM({ws.cell(total_row, block['cashbook_col']).coordinate}-"
-            f"{ws.cell(total_row, block['bank_col']).coordinate})"
+        tot_cb = get_writable_cell(ws, total_row, block["cashbook_col"])
+        tot_bk = get_writable_cell(ws, total_row, block["bank_col"])
+        tot_df = get_writable_cell(ws, total_row, block["difference_col"])
+
+        tot_cb.value = f"=SUM({ws.cell(5, block['cashbook_col']).coordinate}:{ws.cell(data_end_row, block['cashbook_col']).coordinate})"
+        tot_bk.value = f"=SUM({ws.cell(5, block['bank_col']).coordinate}:{ws.cell(data_end_row, block['bank_col']).coordinate})"
+        tot_df.value = (
+            f"=SUM({tot_cb.coordinate}-"
+            f"{tot_bk.coordinate})"
         )
 
         _write_audit_sheet(
