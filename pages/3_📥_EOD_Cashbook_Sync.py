@@ -73,6 +73,16 @@ with st.form("eod_sync_form"):
             value=1,
             help="1-based report block number in the target workbook if date matching has multiple matches.",
         )
+        use_latest_duplicate = st.toggle(
+            "🕒 Use Latest Submitted POS (by Timestamp)",
+            value=True,
+            help="When enabled (default), if duplicate POS submissions exist on the report date, the engine resolves duplicates by selecting the latest submission using its timestamp (IF POS DUPLICATE == TRUE -> LATEST SUBMITTED POS AMOUNT = TRUE AMOUNT). When disabled, duplicate amounts are summed together.",
+        )
+        remap_ags10 = st.toggle(
+            "🔄 Map AGS 10 to SGR 10",
+            value=True,
+            help="When enabled (default), terminal AGS 10 (Igbesa AGS) in the Moniepoint export is automatically mapped to SGR 10 in the reconciliation workbook.",
+        )
 
     submit_button = st.form_submit_button("🔄 Execute EOD Reconciliation Sync", type="primary", use_container_width=True)
 
@@ -93,17 +103,101 @@ if submit_button:
                     date_str=date_str,
                     source_sheet=sheet_override,
                     block_number=int(block_number),
+                    use_latest_duplicate=use_latest_duplicate,
+                    remap_ags10=remap_ags10,
                 )
 
             st.success(f"EOD sync completed successfully for date **{date_str}** (Source sheet: `{stats['sourceSheet']}`).")
 
             # Metrics
-            render_metric_cards([
-                ("Source Rows", stats["sourceRows"], None),
-                ("Kept for Date", stats["keptRows"], None),
-                ("Mapped into Workbook", stats["mappedRows"], None),
-                ("Unmatched Terminals", len(stats["unmatchedSourceTerminals"]), None),
-            ])
+            if stats.get("entryModeEnabled"):
+                render_metric_cards([
+                    ("Target DEFAULT", stats["defaultCount"], None),
+                    ("Prior CURRENT Fill-ins", stats["currentFillinCount"], None),
+                    ("Duplicates Resolved", stats["crossDayDuplicatesCount"], None),
+                    ("Mapped into Workbook", stats["mappedRows"], None),
+                    ("Unmatched Terminals", len(stats["unmatchedSourceTerminals"]), None),
+                ])
+
+                # Cross-Day Duplicates Breakdown
+                if stats.get("crossDayDuplicates"):
+                    cross_count = len(stats["crossDayDuplicates"])
+                    with st.expander(f"🔁 Cross-Day Duplicates ({cross_count} resolved — DEFAULT Kept)", expanded=True):
+                        st.info(
+                            f"Found **{cross_count}** POS terminal(s) submitted on both days (as CURRENT yesterday and as DEFAULT today). "
+                            f"Per directive, today's **DEFAULT** amount was kept as the TRUE amount, and yesterday's CURRENT submission was superseded."
+                        )
+                        cross_rows = [
+                            {
+                                "POS Terminal": d["pos"],
+                                "Selected TRUE Amount (DEFAULT)": f"₦{d['defaultAmount']:,.2f}",
+                                "Discarded Amount (Prior CURRENT)": f"₦{d['currentAmount']:,.2f}",
+                                "DEFAULT Submission ID": d.get("defaultSubmissionId", "-"),
+                                "Prior CURRENT Submission ID": d.get("currentSubmissionId", "-"),
+                                "Station": d.get("defaultStation", "-"),
+                            }
+                            for d in stats["crossDayDuplicates"]
+                        ]
+                        st.dataframe(cross_rows, use_container_width=True)
+
+                # Prior Day CURRENT Fill-ins Breakdown
+                if stats.get("fillinTerminals"):
+                    fillin_count = len(stats["fillinTerminals"])
+                    prev_sheet = stats.get("prevSourceSheet", "prior day sheet")
+                    with st.expander(f"📥 Prior Day Fill-ins ({fillin_count} adopted from `{prev_sheet}`)", expanded=True):
+                        st.info(
+                            f"Found **{fillin_count}** POS terminal(s) that were **not submitted today as DEFAULT**, but were submitted yesterday as **CURRENT**. "
+                            f"These records have been automatically adopted to ensure complete reconciliation coverage."
+                        )
+                        fillin_rows = [
+                            {
+                                "POS Terminal": f["pos"],
+                                "Adopted Amount": f"₦{f['amount']:,.2f}",
+                                "Timestamp": f.get("timestamp", "-"),
+                                "Station": f.get("station", "-"),
+                                "Submission ID": f.get("submissionId", "-"),
+                            }
+                            for f in stats["fillinTerminals"]
+                        ]
+                        st.dataframe(fillin_rows, use_container_width=True)
+
+            else:
+                dup_count = len(stats.get("duplicateTerminals", []))
+                dup_metric_title = "Duplicates Resolved (Latest)" if use_latest_duplicate else "Duplicates Summed"
+                render_metric_cards([
+                    ("Source Rows", stats["sourceRows"], None),
+                    ("Kept for Date", stats["keptRows"], None),
+                    ("Mapped into Workbook", stats["mappedRows"], None),
+                    (dup_metric_title, dup_count, None),
+                    ("Unmatched Terminals", len(stats["unmatchedSourceTerminals"]), None),
+                ])
+
+                # Legacy Duplicate Breakdown Table
+                if stats.get("duplicateTerminals"):
+                    dup_mode_label = "Latest Submission by Timestamp" if use_latest_duplicate else "Summed Together"
+                    with st.expander(f"🔁 Duplicate POS Terminals ({dup_count} detected - {dup_mode_label})", expanded=True):
+                        if use_latest_duplicate:
+                            st.info(
+                                f"Found **{dup_count}** POS terminal(s) with multiple submissions for **{date_str}**. "
+                                f"Resolved by selecting the **latest submitted POS amount based on timestamp**."
+                            )
+                        else:
+                            st.info(
+                                f"Found **{dup_count}** POS terminal(s) with multiple submissions for **{date_str}**. "
+                                f"Amounts were **summed together**."
+                            )
+                        dup_rows = [
+                            {
+                                "POS Terminal": d["pos"],
+                                "Submission Count": d["count"],
+                                "Latest Timestamp": d.get("latestTimestamp", "-"),
+                                "Selected Cashbook Amount": f"₦{d['computedAmount']:,.2f}",
+                                "All Submissions": ", ".join(f"₦{a:,.2f}" for a in d["amounts"]),
+                                "Total If Summed": f"₦{d['totalSum']:,.2f}",
+                            }
+                            for d in stats["duplicateTerminals"]
+                        ]
+                        st.dataframe(dup_rows, use_container_width=True)
 
             # Download Action
             st.markdown("### 📥 Download Reconciled Workbook")
