@@ -332,6 +332,86 @@ def test_eod_entry_mode_real_file_day27():
     assert "SGR 10" not in res_no_remap["amountByPos"]
 
 
+def test_multi_bank_loader_synthetic():
+    import tempfile
+    import openpyxl
+    from core.pos_recon.bank_loader import load_multiple_json_to_workbook
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Sheet1"
+
+    # Block 1 headers in row 1 & row 4
+    ws.cell(1, 3, "2026-10-08")
+    ws.cell(4, 1, "TERMINAL SERIALS")
+    ws.cell(4, 2, "CASHBOOK EOD")
+    ws.cell(4, 3, "BANK STATEMENT")
+    ws.cell(4, 4, "DIFFERENCE")
+
+    # Block 2 headers in row 1 & row 4
+    ws.cell(1, 10, "2026-10-09")
+    ws.cell(4, 8, "TERMINAL SERIALS")
+    ws.cell(4, 9, "CASHBOOK EOD")
+    ws.cell(4, 10, "BANK STATEMENT")
+    ws.cell(4, 11, "DIFFERENCE")
+
+    # Terminals in Block 1
+    ws.cell(5, 1, "SGR 10")
+    ws.cell(5, 2, 500)
+    ws.cell(6, 1, "OBX 20")
+    ws.cell(6, 2, 800)
+
+    # Terminals in Block 2
+    ws.cell(5, 8, "SGR 10")
+    ws.cell(5, 9, 600)
+    ws.cell(6, 8, "OBX 20")
+    ws.cell(6, 9, 850)
+
+    with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as tmp:
+        wb.save(tmp.name)
+        wb_path = Path(tmp.name)
+
+    day8_json = [
+        {"pos": "SGR 10", "status": "OK", "credit": "500.00"},
+        {"pos": "OBX 20", "status": "FAILED", "error": "Timeout", "credit": ""},
+    ]
+    day9_json = [
+        {"pos": "SGR 10", "status": "OK", "credit": "600.00"},
+        {"pos": "OBX 20", "status": "OK", "credit": "850.00"},
+    ]
+
+    items = [
+        {"json_input": day8_json, "date": "2026-10-08", "block_number": 1, "filename": "day8.json"},
+        {"json_input": day9_json, "date": "2026-10-09", "block_number": 2, "filename": "day9.json"},
+    ]
+
+    try:
+        out_path, stats = load_multiple_json_to_workbook(wb_path, items)
+        assert out_path.exists()
+        assert stats["totalFiles"] == 2
+        assert stats["totalMatched"] == 4
+        assert stats["totalOkWritten"] == 3
+        assert stats["totalStatusWritten"] == 1
+
+        # Check values in output workbook
+        check_wb = openpyxl.load_workbook(out_path)
+        check_ws = check_wb.active
+        # Block 1: SGR 10 -> 500, OBX 20 -> FAILED
+        assert check_ws.cell(5, 3).value == 500.0
+        assert check_ws.cell(6, 3).value == "FAILED"
+        assert check_ws.cell(6, 3).comment is not None
+
+        # Block 2: SGR 10 -> 600, OBX 20 -> 850
+        assert check_ws.cell(5, 10).value == 600.0
+        assert check_ws.cell(6, 10).value == 850.0
+
+        check_wb.close()
+        cleanup_files(out_path)
+    finally:
+        cleanup_files(wb_path)
+
+
+
 
 
 
