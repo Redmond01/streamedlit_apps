@@ -80,6 +80,51 @@ def render_home_dashboard() -> None:
             unsafe_allow_html=True,
         )
 
+    st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
+    col1b, col1c = st.columns(2)
+
+    with col1b:
+        st.markdown(
+            """
+            <div style="background: #1e293b; padding: 1.25rem; border-radius: 8px; border: 1px solid #334155; height: 100%;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <span style="font-size: 1.5rem;">🔄</span>
+                    <h4 style="margin: 0; color: #38bdf8;">Report Auto-Sync</h4>
+                </div>
+                <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 12px;">
+                    Automated Day N+1 sheet creation and rollover across 60+ station workbooks. Carries closing meters/dippings to opening, resets sales to 0, clears POS & expenses, and increments date.
+                </p>
+                <ul style="color: #cbd5e1; font-size: 0.85rem; padding-left: 20px;">
+                    <li>Dynamic anchor detection (4 to 12 pumps)</li>
+                    <li>Outer & inner mirror meter resets</li>
+                    <li>Preserves static ADD UP cash balances</li>
+                </ul>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with col1c:
+        st.markdown(
+            """
+            <div style="background: #1e293b; padding: 1.25rem; border-radius: 8px; border: 1px solid #334155; height: 100%;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <span style="font-size: 1.5rem;">✍️</span>
+                    <h4 style="margin: 0; color: #38bdf8;">Report Auto-Fill</h4>
+                </div>
+                <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 12px;">
+                    Mirrors filled Outer Meter (Left Side) data directly into the Inner Meter (Right Side) audit table: tank dippings, matching POS terminal collections, products received, and expenses.
+                </p>
+                <ul style="color: #cbd5e1; font-size: 0.85rem; padding-left: 20px;">
+                    <li>Auto-syncs dipping sales & expected gear</li>
+                    <li>Fuzzy terminal header resolution</li>
+                    <li>Single or batch 60+ ZIP download</li>
+                </ul>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
     st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
     st.markdown("#### 💳 POS & Bank Reconciliation")
 

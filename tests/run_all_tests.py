@@ -9,7 +9,15 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from tests import test_memory, test_gear, test_pos_recon, test_sales, test_bank_lodgment
+from tests import (
+    test_memory,
+    test_gear,
+    test_pos_recon,
+    test_sales,
+    test_bank_lodgment,
+    test_report_syncer,
+    test_report_auto_fill,
+)
 import unittest
 
 def run_tests():
@@ -34,8 +42,8 @@ def run_tests():
                     traceback.print_exc()
                     failed += 1
 
-    # Run unittest suites (test_sales, test_bank_lodgment)
-    for umod in [test_sales, test_bank_lodgment]:
+    # Run unittest suites (test_sales, test_bank_lodgment, test_report_syncer, test_report_auto_fill)
+    for umod in [test_sales, test_bank_lodgment, test_report_syncer, test_report_auto_fill]:
         suite = unittest.defaultTestLoader.loadTestsFromModule(umod)
         runner = unittest.TextTestRunner(verbosity=1)
         res = runner.run(suite)

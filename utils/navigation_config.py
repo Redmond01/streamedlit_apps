@@ -28,6 +28,16 @@ NAVIGATION_CONFIG = {
             "title": "Daily Sales Aggregator",      # <-- Edit your display title here!
             "icon": "📊",
         },
+        {
+            "target": "pages/7_🔄_Report_Auto_Sync.py",
+            "title": "Report Auto-Sync",            # <-- Edit your display title here!
+            "icon": "🔄",
+        },
+        {
+            "target": "pages/8_✍️_Report_Auto_Fill.py",
+            "title": "Report Auto-Fill",            # <-- Edit your display title here!
+            "icon": "✍️",
+        },
     ],
     "POS & Bank Reconciliation": [
         {
