@@ -2,6 +2,7 @@
 
 from .report_syncer import (
     SyncSummary,
+    clean_report_name,
     sync_multiple_station_files,
     sync_station_file,
     sync_station_report,
@@ -15,6 +16,7 @@ from .report_auto_fill import (
 )
 
 __all__ = [
+    "clean_report_name",
     "SyncSummary",
     "sync_station_report",
     "sync_station_file",

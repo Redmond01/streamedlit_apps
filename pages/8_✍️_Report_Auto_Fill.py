@@ -134,9 +134,11 @@ if submit_button:
             tot_pos = sum(s.pos_copied for s in summaries)
             tot_prod = sum(s.products_copied for s in summaries)
             tot_exp = sum(s.expenses_copied for s in summaries)
+            tot_pumps = sum(s.pumps_synced for s in summaries)
 
             render_metric_cards([
                 ("Workbooks Processed", len(uploaded_files), None),
+                ("Pumps Synced/Healed", tot_pumps, None),
                 ("Tanks Copied", tot_tanks, None),
                 ("POS Terminals Copied", tot_pos, None),
                 ("Products Copied", tot_prod, None),
@@ -187,6 +189,7 @@ if submit_button:
                     "Station": s.station_name,
                     "Sheet": s.sheet_name,
                     "Date": s.date_str,
+                    "Pumps Synced": s.pumps_synced,
                     "Tanks Copied": s.tanks_copied,
                     "POS Copied": s.pos_copied,
                     "Products Copied": s.products_copied,
