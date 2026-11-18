@@ -88,11 +88,13 @@ def _format_next_sheet_title(src_title: str) -> str:
 
 def sync_station_report(
     wb: openpyxl.Workbook,
+    wb_data: openpyxl.Workbook | None = None,
 ) -> tuple[openpyxl.Workbook, SyncSummary]:
     """Synchronizes a station workbook by copying the last sheet and resetting the 7 sectors.
 
     Args:
         wb: openpyxl Workbook loaded with data_only=False.
+        wb_data: Optional openpyxl Workbook loaded with data_only=True to extract evaluated figures.
 
     Returns:
         tuple of (updated_wb, SyncSummary)
@@ -102,6 +104,13 @@ def sync_station_report(
 
     src_ws = wb.worksheets[-1]
     new_ws = wb.copy_worksheet(src_ws)
+
+    src_ws_data = None
+    if wb_data is not None:
+        if src_ws.title in wb_data.sheetnames:
+            src_ws_data = wb_data[src_ws.title]
+        elif wb_data.worksheets:
+            src_ws_data = wb_data.worksheets[-1]
 
     # 1. Determine new sheet title
     target_title = _format_next_sheet_title(src_ws.title)
@@ -322,7 +331,12 @@ def sync_station_report(
                 header_row_1 = r
                 val_row_1 = r + 1
                 col_addup = c
+                # Determine col_avail_cash (usually col_addup + 1)
                 col_avail_cash = c + 1
+                for c_scan in range(c + 1, min(c + 5, new_ws.max_column + 1)):
+                    if "AVAILABLE" in str(new_ws.cell(header_row_1, c_scan).value or "").upper():
+                        col_avail_cash = c_scan
+                        break
 
                 # Left side POS columns (cols 1 to c - 1)
                 for c_pos in range(1, col_addup):
@@ -333,13 +347,40 @@ def sync_station_report(
                             cell_to_clear.value = None
                             pos_cleared += 1
 
-                # The ADD UP figure is static and must be brought forward without change (never an equation)
-                addup_val = src_ws.cell(val_row_1, col_addup).value
-                if isinstance(addup_val, str) and addup_val.startswith("="):
-                    # Do not set equation into ADD UP
-                    pass
-                else:
-                    new_ws.cell(val_row_1, col_addup).value = addup_val
+                # Carry forward previous day's ending AVAILABLE CASH into ADD UP.
+                # Must be a static numeric figure (never an equation), ensuring ADD UP and
+                # AVAILABLE CASH match as the exact same figure on day opening.
+                prev_avail_cash = None
+                if src_ws_data and col_avail_cash <= src_ws_data.max_column:
+                    v_d = src_ws_data.cell(val_row_1, col_avail_cash).value
+                    if isinstance(v_d, (int, float)):
+                        prev_avail_cash = float(v_d)
+                    elif isinstance(v_d, str) and not v_d.startswith("="):
+                        try:
+                            prev_avail_cash = float(v_d.replace(",", "").strip())
+                        except ValueError:
+                            pass
+
+                # Fallback if wb_data was not provided or had None: check src_ws
+                if prev_avail_cash is None and col_avail_cash <= src_ws.max_column:
+                    v_f = src_ws.cell(val_row_1, col_avail_cash).value
+                    if isinstance(v_f, (int, float)):
+                        prev_avail_cash = float(v_f)
+                    elif isinstance(v_f, str) and not v_f.startswith("="):
+                        try:
+                            prev_avail_cash = float(v_f.replace(",", "").strip())
+                        except ValueError:
+                            pass
+
+                # Second fallback: existing numeric ADD UP in src_ws
+                if prev_avail_cash is None and col_addup <= src_ws.max_column:
+                    v_a = src_ws.cell(val_row_1, col_addup).value
+                    if isinstance(v_a, (int, float)):
+                        prev_avail_cash = float(v_a)
+
+                # Assign static float to ADD UP (never an equation)
+                if prev_avail_cash is not None:
+                    new_ws.cell(val_row_1, col_addup).value = round(float(prev_avail_cash), 2)
 
                 # Rollover row (Day N+1)
                 if header_row_1 + 3 <= new_ws.max_row:
@@ -389,10 +430,17 @@ def sync_station_report(
                             cell_to_clear.value = None
                             pos_cleared += 1
 
-                # Ensure right-side ADD UP static figures are preserved
+                # Ensure right-side ADD UP static figures are preserved (never an equation)
                 for c_scan in range(col_avail_cash + 1, new_ws.max_column + 1):
                     if "ADD UP" in str(new_ws.cell(header_row_1, c_scan).value or "").upper():
-                        new_ws.cell(val_row_1, c_scan).value = src_ws.cell(val_row_1, c_scan).value
+                        right_addup_val = src_ws.cell(val_row_1, c_scan).value
+                        if isinstance(right_addup_val, (int, float)):
+                            new_ws.cell(val_row_1, c_scan).value = right_addup_val
+                        elif isinstance(right_addup_val, str) and not right_addup_val.startswith("="):
+                            try:
+                                new_ws.cell(val_row_1, c_scan).value = float(right_addup_val.replace(",", "").strip())
+                            except ValueError:
+                                new_ws.cell(val_row_1, c_scan).value = right_addup_val
 
                 # Break after handling the primary POS table
                 break
@@ -419,6 +467,11 @@ def sync_station_report(
         message=f"Created {new_ws.title} ({new_date_str}) from {src_ws.title} ({old_date_str}) with all meters, tanks, POS, and expenses reset.",
     )
 
+    try:
+        wb.calculation.fullCalcOnLoad = True
+    except Exception:
+        pass
+
     return wb, summary
 
 
@@ -438,7 +491,11 @@ def sync_station_file(
 
     try:
         wb = openpyxl.load_workbook(spooled_path, data_only=False)
-        updated_wb, summary = sync_station_report(wb)
+        try:
+            wb_data = openpyxl.load_workbook(spooled_path, data_only=True)
+        except Exception:
+            wb_data = None
+        updated_wb, summary = sync_station_report(wb, wb_data=wb_data)
 
         # Infer station name from filename
         stem = Path(orig_name).stem

@@ -21,6 +21,7 @@ class TestReportSyncer(unittest.TestCase):
     def test_sync_mowe_report(self):
         """Test rollover of Mowe station workbook (10 pumps, 5 tanks)."""
         wb = openpyxl.load_workbook(SAMPLE_MOWE, data_only=False)
+        wb_data = openpyxl.load_workbook(SAMPLE_MOWE, data_only=True)
         old_sheet_count = len(wb.worksheets)
         src_ws = wb.worksheets[-1]
         self.assertEqual(src_ws.title, "Sheet10")
@@ -29,9 +30,8 @@ class TestReportSyncer(unittest.TestCase):
         pms1_close = src_ws["F3"].value
         inner_pms1_close = src_ws["AI3"].value
         pms1_tank_close = src_ws["F20"].value
-        avail_cash = src_ws["R27"].value
 
-        updated_wb, summary = sync_station_report(wb)
+        updated_wb, summary = sync_station_report(wb, wb_data=wb_data)
 
         self.assertEqual(len(updated_wb.worksheets), old_sheet_count + 1)
         new_ws = updated_wb.worksheets[-1]
@@ -71,8 +71,11 @@ class TestReportSyncer(unittest.TestCase):
         # 7. POS: Values cleared
         self.assertIsNone(new_ws["F27"].value)
         self.assertIsNone(new_ws["G27"].value)
-        # ADD UP brought forward statically from src_ws
-        self.assertEqual(new_ws["Q27"].value, src_ws["Q27"].value)
+        # ADD UP brought forward as evaluated float of previous day's AVAILABLE CASH (never an equation)
+        self.assertEqual(new_ws["Q27"].value, 58868374.93)
+        self.assertFalse(str(new_ws["Q27"].value).startswith("="))
+        # AVAILABLE CASH keeps its formula
+        self.assertTrue(str(new_ws["R27"].value).startswith("="))
         self.assertEqual(new_ws["AP27"].value, src_ws["AP27"].value)
         self.assertEqual(new_ws["AR27"].value, src_ws["AR27"].value)
 
@@ -86,13 +89,14 @@ class TestReportSyncer(unittest.TestCase):
     def test_sync_eleko_report(self):
         """Test rollover of Eleko 2 station workbook (7 pumps, 3 tanks)."""
         wb = openpyxl.load_workbook(SAMPLE_ELEKO, data_only=False)
+        wb_data = openpyxl.load_workbook(SAMPLE_ELEKO, data_only=True)
         src_ws = wb.worksheets[-1]
         self.assertEqual(src_ws.title, "Sheet10")
 
         pms1_close = src_ws["E3"].value
         tank_close = src_ws["F17"].value
 
-        updated_wb, summary = sync_station_report(wb)
+        updated_wb, summary = sync_station_report(wb, wb_data=wb_data)
 
         new_ws = updated_wb.worksheets[-1]
         self.assertEqual(new_ws.title, "Sheet11")
@@ -110,8 +114,11 @@ class TestReportSyncer(unittest.TestCase):
 
         # POS cleared
         self.assertIsNone(new_ws["G22"].value)
-        # ADD UP static
-        self.assertEqual(new_ws["O22"].value, src_ws["O22"].value)
+        # ADD UP brought forward as evaluated float of previous day's AVAILABLE CASH (never an equation)
+        self.assertEqual(new_ws["O22"].value, 19092865.7)
+        self.assertFalse(str(new_ws["O22"].value).startswith("="))
+        # AVAILABLE CASH keeps its formula
+        self.assertTrue(str(new_ws["P22"].value).startswith("="))
         self.assertEqual(new_ws["AO22"].value, src_ws["AO22"].value)
 
     def test_sync_agbara_report(self):
