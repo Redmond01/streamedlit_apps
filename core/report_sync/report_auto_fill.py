@@ -235,15 +235,7 @@ def auto_fill_sheet(
                 isinstance(val_out_open, str) and val_out_open.replace(".", "").isdigit()
             )
 
-            # Heal outer meter if 0 or None via lookback
-            if (not is_num_out or val_out_open == 0 or val_out_open == "0") and wb_worksheets:
-                last_cl_rec, any_p = _resolve_last_active_closing(
-                    wb_worksheets, r, outer_open_col, outer_close_cols
-                )
-                if any_p or (last_cl_rec is not None and last_cl_rec > 0):
-                    ws.cell(r, outer_open_col).value = last_cl_rec
-                    val_out_open = last_cl_rec
-                    is_num_out = True
+            # Auto-Fill strictly treats Outer Meters as read-only. We do NOT mutate outer_open_col.
 
             # Inner meter healing & alignment across all active shifts
             if inner_open_col:
@@ -266,9 +258,10 @@ def auto_fill_sheet(
                         is_num_in = True
 
                 # Align inner closing meters with outer shift readings
-                if is_num_out and is_num_in and outer_close_cols and inner_close_cols:
-                    vo = float(val_out_open)
+                if is_num_in and inner_close_cols:
+                    vo = float(val_out_open) if is_num_out else 0.0
                     vio = float(val_in_open)
+                    is_vio_int = isinstance(val_in_open, int)
                     scales_match = abs(vio - vo) < 1.0
 
                     row_synced = False
@@ -276,20 +269,50 @@ def auto_fill_sheet(
                         c_out = outer_close_cols[k]
                         c_in = inner_close_cols[k]
                         v_out = ws.cell(r, c_out).value
+                        v_in_existing = ws.cell(r, c_in).value
 
-                        if v_out is not None and isinstance(v_out, (int, float)) and v_out > 0:
-                            s_out = float(v_out) - vo
+                        v_in_num = None
+                        if isinstance(v_in_existing, (int, float)):
+                            v_in_num = float(v_in_existing)
+                        elif isinstance(v_in_existing, str) and v_in_existing.replace(".", "").isdigit():
+                            try:
+                                v_in_num = float(v_in_existing)
+                            except ValueError:
+                                pass
+
+                        v_out_num = None
+                        if isinstance(v_out, (int, float)):
+                            v_out_num = float(v_out)
+                        elif isinstance(v_out, str) and v_out.replace(".", "").isdigit():
+                            try:
+                                v_out_num = float(v_out)
+                            except ValueError:
+                                pass
+
+                        # 1. If auditor already recorded a valid inner closing reading (active sales), preserve it!
+                        if v_in_num is not None and v_in_num > vio:
+                            row_synced = True
+                            continue
+
+                        # 2. Outer shift has recorded positive reading with active sales
+                        if v_out_num is not None and v_out_num > vo:
+                            s_out = v_out_num - vo
                             if scales_match:
-                                target_in_val = v_out
+                                target_in_val = v_out if not is_vio_int else int(round(v_out_num))
                             else:
-                                target_in_val = round(vio + s_out)
+                                target_in_val = round(vio + s_out) if is_vio_int else round(vio + s_out, 2)
 
                             ws.cell(r, c_in).value = target_in_val
                             row_synced = True
-                        elif v_out == 0 or v_out == "0":
-                            ws.cell(r, c_in).value = 0
+
+                        # 3. Outer shift has 0 sales or pump is inactive
+                        elif v_out_num is not None and (v_out_num == 0 or v_out_num <= vo):
+                            # For inactive pump or 0 sales, inner closing stays equal to inner opening
+                            if v_in_num is None or v_in_num == 0:
+                                ws.cell(r, c_in).value = int(vio) if is_vio_int else vio
+
+                        # 4. Trailing shifts that don't exist
                         elif v_out is None and k >= 2:
-                            # Preserve None placeholders on trailing shifts
                             ws.cell(r, c_in).value = None
 
                     if row_synced:
