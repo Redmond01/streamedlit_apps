@@ -72,21 +72,28 @@ with st.form("report_auto_fill_form"):
         help="Upload the station reports that have been filled on the left side.",
     )
 
-    st.subheader("2. Target Sheet Selection")
+    st.subheader("2. Refill Scope & Target Sheet")
     col1, col2 = st.columns(2)
     with col1:
+        fill_scope = st.radio(
+            "🎯 Refill Scope",
+            options=[
+                "Inner Meter Section Only (Right section)",
+                "All Sectors (Inner Meters, Tanks, POS, Products, Expenses)",
+            ],
+            index=0,
+            help="Choose whether to update only the inner meter section on the right (recommended), or all operational sectors.",
+        )
+    with col2:
         target_mode = st.radio(
             "📅 Target Sheet to Fill",
             options=["Latest Sheet Only (Last Day)", "All Sheets in Workbook", "Specific Sheet Name"],
             index=0,
             help="Choose whether to mirror data on the most recent daily sheet, all sheets, or a specific sheet.",
         )
-    with col2:
         specific_sheet_name = None
         if target_mode == "Specific Sheet Name":
             specific_sheet_name = st.text_input("Enter Worksheet Name", value="Sheet10")
-        else:
-            st.info("💡 By default, auto-fill targets the latest sheet (last day) in each workbook.")
 
     submit_button = st.form_submit_button(
         "🚀 Run Report Auto-Fill Pipeline",
@@ -112,12 +119,15 @@ if submit_button:
         elif target_mode == "Specific Sheet Name":
             mode_code = "specific"
 
+        scope_code = "meters_only" if "Inner Meter" in fill_scope else "all"
+
         try:
             with st.spinner("Processing outer-to-inner auto-fill..."):
                 results, zip_buf, summaries = auto_fill_multiple_station_files(
                     files=uploaded_files,
                     target_sheet_mode=mode_code,
                     specific_sheet_name=specific_sheet_name.strip() if specific_sheet_name else None,
+                    mode=scope_code,
                     progress_callback=on_progress,
                 )
 
@@ -130,11 +140,11 @@ if submit_button:
             )
 
             # Metric Cards
-            tot_tanks = sum(s.tanks_copied for s in summaries)
-            tot_pos = sum(s.pos_copied for s in summaries)
-            tot_prod = sum(s.products_copied for s in summaries)
-            tot_exp = sum(s.expenses_copied for s in summaries)
-            tot_pumps = sum(s.pumps_synced for s in summaries)
+            tot_tanks = sum(getattr(s, "tanks_copied", 0) for s in summaries)
+            tot_pos = sum(getattr(s, "pos_copied", 0) for s in summaries)
+            tot_prod = sum(getattr(s, "products_copied", 0) for s in summaries)
+            tot_exp = sum(getattr(s, "expenses_copied", 0) for s in summaries)
+            tot_pumps = sum(getattr(s, "pumps_synced", getattr(s, "pump_synced", 0)) for s in summaries)
 
             render_metric_cards([
                 ("Workbooks Processed", len(uploaded_files), None),
@@ -186,16 +196,16 @@ if submit_button:
             table_data = []
             for s in summaries:
                 table_data.append({
-                    "Station": s.station_name,
-                    "Sheet": s.sheet_name,
-                    "Date": s.date_str,
-                    "Pumps Synced": s.pumps_synced,
-                    "Tanks Copied": s.tanks_copied,
-                    "POS Copied": s.pos_copied,
-                    "Products Copied": s.products_copied,
-                    "Expenses Copied": s.expenses_copied,
-                    "Status": "✅ Success" if s.status == "Success" else "❌ Error",
-                    "Details": s.message,
+                    "Station": getattr(s, "station_name", ""),
+                    "Sheet": getattr(s, "sheet_name", ""),
+                    "Date": getattr(s, "date_str", ""),
+                    "Pumps Synced": getattr(s, "pumps_synced", getattr(s, "pump_synced", 0)),
+                    "Tanks Copied": getattr(s, "tanks_copied", 0),
+                    "POS Copied": getattr(s, "pos_copied", 0),
+                    "Products Copied": getattr(s, "products_copied", 0),
+                    "Expenses Copied": getattr(s, "expenses_copied", 0),
+                    "Status": "✅ Success" if getattr(s, "status", "") == "Success" else "❌ Error",
+                    "Details": getattr(s, "message", ""),
                 })
 
             df_summary = pd.DataFrame(table_data)

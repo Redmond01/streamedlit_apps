@@ -177,6 +177,19 @@ class TestReportAutoFill(unittest.TestCase):
         self.assertEqual(summaries[0].status, "Success")
         self.assertGreaterEqual(summaries[0].pumps_synced, 1)
 
+    def test_auto_fill_meters_only_scope(self):
+        """Test that meters_only mode only updates inner meters and preserves tanks, pos, etc."""
+        p = Path("/home/im-redmond/Downloads/NOVEMBER REPORT 2026/NOVEMBER Agbara 1 sgr_synced_20261117.xlsx")
+        if not p.exists():
+            return
+        _, out_name, summaries = auto_fill_station_file(p, target_sheet_mode="latest", mode="meters_only")
+        self.assertEqual(summaries[0].status, "Success")
+        self.assertEqual(summaries[0].tanks_copied, 0)
+        self.assertEqual(summaries[0].pos_copied, 0)
+        self.assertGreaterEqual(summaries[0].pumps_synced, 1)
+        # Verify both pump_synced and pumps_synced attributes exist
+        self.assertEqual(summaries[0].pump_synced, summaries[0].pumps_synced)
+
 
 if __name__ == "__main__":
     unittest.main()

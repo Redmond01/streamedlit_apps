@@ -2,7 +2,7 @@
 
 After a station daily report has been filled on the Outer Meter (Left side),
 this engine copies and synchronizes the corresponding operational figures to the Inner Meter (Right side):
-1. Meters: Heals zero-meter corruption via backward historical lookback and aligns inner closing meters.
+1. Meters: Heals zero-meter corruption via backward historical lookback and aligns inner closing meters across all shifts.
 2. Tank Dipping: Symmetrical multi-pair dynamic dipping copy (Outer -> Inner), strictly preserving Excel formulas.
 3. POS List: Terminal matching across Day N + Day N+1 rollover rows, maintaining static ADD UP figures.
 4. Products Received: Outer -> Inner litres received copy up to row 25.
@@ -36,13 +36,25 @@ class AutoFillSummary:
     station_name: str
     sheet_name: str
     date_str: str
-    tanks_copied: int
-    pos_copied: int
-    products_copied: int
-    expenses_copied: int
+    tanks_copied: int = 0
+    pos_copied: int = 0
+    products_copied: int = 0
+    expenses_copied: int = 0
     pumps_synced: int = 0
+    pump_synced: int = 0
     status: str = "Success"
     message: str = "Report successfully filled from Left side to Right side."
+
+    def __post_init__(self):
+        if self.pumps_synced and not self.pump_synced:
+            self.pump_synced = self.pumps_synced
+        elif self.pump_synced and not self.pumps_synced:
+            self.pumps_synced = self.pump_synced
+
+    def __getattr__(self, name: str) -> Any:
+        if name in ("pump_synced", "pumps_synced"):
+            return self.__dict__.get("pumps_synced", self.__dict__.get("pump_synced", 0))
+        raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
 
 
 def _norm_label(s: Any) -> str:
@@ -53,12 +65,14 @@ def _norm_label(s: Any) -> str:
 def auto_fill_sheet(
     ws: openpyxl.worksheet.worksheet.Worksheet,
     wb_worksheets: list[openpyxl.worksheet.worksheet.Worksheet] | None = None,
+    mode: str = "all",
 ) -> dict[str, int]:
-    """Copies Tank Dipping, POS list, Products Received, Expenses, and synchronizes pump meters from Left to Right.
+    """Copies or synchronizes operational figures from Left side to Right side.
 
     Args:
         ws: openpyxl worksheet to process.
         wb_worksheets: Optional list of all worksheets in workbook for historical meter recovery.
+        mode: "meters_only" (updates inner meters only) or "all" (meters, tanks, pos, products, expenses).
 
     Returns:
         dict with counts of items copied/healed: tanks, pos, products, expenses, pumps.
@@ -79,7 +93,7 @@ def auto_fill_sheet(
         return counts
 
     # ---------------------------------------------------------
-    # 1. TANK TABLE HEADER & DIP PAIRS (Multi-pair dynamic tank support)
+    # 1. TANK TABLE HEADER & DIP PAIRS (Boundary & Multi-pair detection)
     # ---------------------------------------------------------
     tank_header_row = None
     dip_pairs: list[tuple[int, int]] = []
@@ -122,7 +136,7 @@ def auto_fill_sheet(
         inner_dip_pairs = [p for p in dip_pairs if p[0] - first_c >= 10]
 
     # ---------------------------------------------------------
-    # 2. METER TABLE HEADERS & PUMP HEALING / ALIGNMENT
+    # 2. METER TABLE HEADERS & INNER METER UPDATING / HEALING
     # ---------------------------------------------------------
     meter_header_row = None
     outer_open_col = None
@@ -230,26 +244,8 @@ def auto_fill_sheet(
                     ws.cell(r, outer_open_col).value = last_cl_rec
                     val_out_open = last_cl_rec
                     is_num_out = True
-                    counts["pumps"] += 1
 
-            # Determine outer sales
-            outer_sales = 0.0
-            last_out_close = None
-            if outer_close_cols:
-                for c in reversed(outer_close_cols):
-                    v_c = ws.cell(r, c).value
-                    if v_c is not None and isinstance(v_c, (int, float)) and v_c > 0 and not str(v_c).startswith("="):
-                        last_out_close = v_c
-                        break
-                    if isinstance(v_c, str) and v_c.replace(".", "").isdigit() and float(v_c) > 0:
-                        last_out_close = float(v_c) if "." in v_c else int(v_c)
-                        break
-
-            if is_num_out and last_out_close is not None and isinstance(val_out_open, (int, float)):
-                if last_out_close > val_out_open:
-                    outer_sales = float(last_out_close) - float(val_out_open)
-
-            # Inner meter healing and auto-fill
+            # Inner meter healing & alignment across all active shifts
             if inner_open_col:
                 in_lbl = str(ws.cell(r, inner_open_col - 1).value or "").strip().upper()
                 if "TOTAL" in in_lbl or in_lbl.startswith("="):
@@ -268,30 +264,40 @@ def auto_fill_sheet(
                         ws.cell(r, inner_open_col).value = last_in_rec
                         val_in_open = last_in_rec
                         is_num_in = True
+
+                # Align inner closing meters with outer shift readings
+                if is_num_out and is_num_in and outer_close_cols and inner_close_cols:
+                    vo = float(val_out_open)
+                    vio = float(val_in_open)
+                    scales_match = abs(vio - vo) < 1.0
+
+                    row_synced = False
+                    for k in range(min(len(outer_close_cols), len(inner_close_cols))):
+                        c_out = outer_close_cols[k]
+                        c_in = inner_close_cols[k]
+                        v_out = ws.cell(r, c_out).value
+
+                        if v_out is not None and isinstance(v_out, (int, float)) and v_out > 0:
+                            s_out = float(v_out) - vo
+                            if scales_match:
+                                target_in_val = v_out
+                            else:
+                                target_in_val = round(vio + s_out)
+
+                            ws.cell(r, c_in).value = target_in_val
+                            row_synced = True
+                        elif v_out == 0 or v_out == "0":
+                            ws.cell(r, c_in).value = 0
+                        elif v_out is None and k >= 2:
+                            # Preserve None placeholders on trailing shifts
+                            ws.cell(r, c_in).value = None
+
+                    if row_synced:
                         counts["pumps"] += 1
 
-                # Auto-fill inner closing meter if not yet filled by auditor
-                if is_num_in and inner_close_cols and outer_sales > 0:
-                    target_in_col = inner_close_cols[0]
-                    val_in_close = ws.cell(r, target_in_col).value
-                    in_needs_fill = (
-                        val_in_close is None
-                        or val_in_close == 0
-                        or val_in_close == "0"
-                        or val_in_close == val_in_open
-                    )
-                    if in_needs_fill:
-                        if (
-                            isinstance(val_in_open, (int, float))
-                            and isinstance(val_out_open, (int, float))
-                            and abs(float(val_in_open) - float(val_out_open)) < 1
-                            and last_out_close is not None
-                        ):
-                            ws.cell(r, target_in_col).value = last_out_close
-                        else:
-                            new_in_close = round(float(val_in_open) + outer_sales)
-                            ws.cell(r, target_in_col).value = new_in_close
-                        counts["pumps"] += 1
+    # If the user only requested updating the Inner Meter section, return now!
+    if mode == "meters_only":
+        return counts
 
     # ---------------------------------------------------------
     # 3. TANK DIPPING: Outer -> Inner (Multi-pair dynamic tank support)
@@ -528,6 +534,7 @@ def auto_fill_workbook(
     wb: openpyxl.Workbook,
     target_sheet_mode: str = "latest",
     specific_sheet_name: str | None = None,
+    mode: str = "all",
 ) -> tuple[openpyxl.Workbook, list[AutoFillSummary]]:
     """Runs auto-fill across specified sheet(s) in a workbook."""
     if not wb.worksheets:
@@ -560,14 +567,18 @@ def auto_fill_workbook(
             if date_str != "Unknown":
                 break
 
-        counts = auto_fill_sheet(ws, wb_worksheets=wb.worksheets)
+        counts = auto_fill_sheet(ws, wb_worksheets=wb.worksheets, mode=mode)
         is_single_sided = ws.max_column < 30
+        p_count = counts.get("pumps", 0)
+
         if is_single_sided:
             msg = "Single-sided station report (no inner meter table). Preserved."
+        elif mode == "meters_only":
+            msg = f"Updated {p_count} inner meter readings on Right side from Outer meters."
         else:
             msg = f"Copied {counts['tanks']} tanks, {counts['pos']} POS terminals, {counts['products']} products, {counts['expenses']} expenses."
-            if counts.get("pumps", 0) > 0:
-                msg += f" Synced/healed {counts['pumps']} pump meters."
+            if p_count > 0:
+                msg += f" Synced {p_count} pump meters."
 
         summaries.append(
             AutoFillSummary(
@@ -579,7 +590,8 @@ def auto_fill_workbook(
                 pos_copied=counts["pos"],
                 products_copied=counts["products"],
                 expenses_copied=counts["expenses"],
-                pumps_synced=counts.get("pumps", 0),
+                pumps_synced=p_count,
+                pump_synced=p_count,
                 status="Success",
                 message=msg,
             )
@@ -597,6 +609,7 @@ def auto_fill_station_file(
     input_file: Any,
     target_sheet_mode: str = "latest",
     specific_sheet_name: str | None = None,
+    mode: str = "all",
 ) -> tuple[bytes, str, list[AutoFillSummary]]:
     """Processes a single station file and returns updated bytes, output filename, and summaries."""
     if isinstance(input_file, (str, Path)):
@@ -612,6 +625,7 @@ def auto_fill_station_file(
             wb,
             target_sheet_mode=target_sheet_mode,
             specific_sheet_name=specific_sheet_name,
+            mode=mode,
         )
 
         clean_stem = clean_report_name(orig_name)
@@ -637,6 +651,7 @@ def auto_fill_multiple_station_files(
     files: list[Any],
     target_sheet_mode: str = "latest",
     specific_sheet_name: str | None = None,
+    mode: str = "all",
     progress_callback: Callable[[int, int, str], None] | None = None,
 ) -> tuple[list[tuple[str, bytes]], io.BytesIO, list[AutoFillSummary]]:
     """Batch processes multiple station workbooks for auto-fill and packages into a ZIP archive."""
@@ -654,6 +669,7 @@ def auto_fill_multiple_station_files(
                 f,
                 target_sheet_mode=target_sheet_mode,
                 specific_sheet_name=specific_sheet_name,
+                mode=mode,
             )
             results.append((out_name, out_bytes))
             all_summaries.extend(summaries)
@@ -670,6 +686,7 @@ def auto_fill_multiple_station_files(
                     products_copied=0,
                     expenses_copied=0,
                     pumps_synced=0,
+                    pump_synced=0,
                     status="Error",
                     message=str(e),
                 )
