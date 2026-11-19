@@ -47,66 +47,49 @@ class SyncSummary:
 
 
 def _resolve_last_active_closing(
-    wb_worksheets: list[openpyxl.worksheet.worksheet.Worksheet],
+    src_ws: openpyxl.worksheet.worksheet.Worksheet | list[openpyxl.worksheet.worksheet.Worksheet],
     r: int,
     open_col: int,
     close_cols: list[int],
 ) -> tuple[int | float, bool]:
-    """Finds the last valid active closing meter reading for a pump row.
+    """Finds the last valid active closing meter reading for a pump row strictly from src_ws (sheet -1).
 
     Prioritizes the latest positive non-zero reading from the closing columns of src_ws,
     ignoring trailing inactive placeholder zeros (common for single/double shift AGO/LPG).
-    If src_ws only has zeros (e.g. due to previous template shifts or unrecorded readings),
-    looks back across previous workbook sheets to recover the last true cumulative meter.
+    If no positive closing is found, falls back to src_ws opening meter.
+    If src_ws only has zeros (e.g. decommissioned pump), strictly returns (0, False).
+    Never looks back across older sheets (e.g. Sheet 4).
 
     Returns:
         tuple of (last_closing_value, any_positive_close_found)
     """
-    src_ws = wb_worksheets[-1]
+    if isinstance(src_ws, list):
+        ws = src_ws[-1]
+    else:
+        ws = src_ws
+
     last_closing = None
 
-    # 1. Search current sheet closing cols for the last positive number (> 0)
+    # 1. Search src_ws closing cols for the last positive number (> 0)
     for c in reversed(close_cols):
-        v = src_ws.cell(r, c).value
-        if v is not None and isinstance(v, (int, float)) and v > 0:
-            last_closing = v
-            break
-        if v is not None and isinstance(v, str) and v.replace(".", "").isdigit() and float(v) > 0:
-            last_closing = float(v) if "." in v else int(v)
-            break
+        if c <= ws.max_column:
+            v = ws.cell(r, c).value
+            if v is not None and isinstance(v, (int, float)) and v > 0:
+                last_closing = v
+                break
+            if v is not None and isinstance(v, str) and v.replace(".", "").isdigit() and float(v) > 0:
+                last_closing = float(v) if "." in v else int(v)
+                break
 
     any_positive_close = last_closing is not None
 
-    # 2. Check current sheet opening meter if positive
-    if last_closing is None:
-        v_op = src_ws.cell(r, open_col).value
+    # 2. Check src_ws opening meter if positive
+    if last_closing is None and open_col <= ws.max_column:
+        v_op = ws.cell(r, open_col).value
         if v_op is not None and isinstance(v_op, (int, float)) and v_op > 0:
             last_closing = v_op
         elif v_op is not None and isinstance(v_op, str) and v_op.replace(".", "").isdigit() and float(v_op) > 0:
             last_closing = float(v_op) if "." in v_op else int(v_op)
-
-    # 3. Look back across previous sheets in workbook
-    if last_closing is None:
-        for prev_ws in reversed(wb_worksheets[:-1]):
-            for c in reversed(close_cols):
-                if c <= prev_ws.max_column:
-                    v = prev_ws.cell(r, c).value
-                    if v is not None and isinstance(v, (int, float)) and v > 0:
-                        last_closing = v
-                        break
-                    if v is not None and isinstance(v, str) and v.replace(".", "").isdigit() and float(v) > 0:
-                        last_closing = float(v) if "." in v else int(v)
-                        break
-            if last_closing is not None:
-                break
-            if open_col <= prev_ws.max_column:
-                v_op = prev_ws.cell(r, open_col).value
-                if v_op is not None and isinstance(v_op, (int, float)) and v_op > 0:
-                    last_closing = v_op
-                    break
-                if v_op is not None and isinstance(v_op, str) and v_op.replace(".", "").isdigit() and float(v_op) > 0:
-                    last_closing = float(v_op) if "." in v_op else int(v_op)
-                    break
 
     if last_closing is None:
         last_closing = 0
@@ -403,9 +386,9 @@ def sync_station_report(
             is_pump = is_numeric_meter and is_not_total
 
             if is_pump:
-                # Find final active closing meter from src_ws (resolving trailing zeros & template shifts)
+                # Find final active closing meter strictly from src_ws (sheet -1)
                 last_closing, any_pos = _resolve_last_active_closing(
-                    wb.worksheets, r, outer_open_col, outer_close_cols
+                    src_ws, r, outer_open_col, outer_close_cols
                 )
 
                 if last_closing is not None:
@@ -443,7 +426,7 @@ def sync_station_report(
 
                 if is_inner_pump:
                     last_in_closing, in_any_pos = _resolve_last_active_closing(
-                        wb.worksheets, r, inner_open_col, inner_close_cols
+                        src_ws, r, inner_open_col, inner_close_cols
                     )
 
                     if last_in_closing is not None:

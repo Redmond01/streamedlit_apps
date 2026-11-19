@@ -248,9 +248,9 @@ def auto_fill_sheet(
                     isinstance(val_in_open, str) and val_in_open.replace(".", "").isdigit()
                 )
 
-                if (not is_num_in or val_in_open == 0 or val_in_open == "0") and wb_worksheets:
+                if not is_num_in or val_in_open == 0 or val_in_open == "0":
                     last_in_rec, in_any_p = _resolve_last_active_closing(
-                        wb_worksheets, r, inner_open_col, inner_close_cols
+                        ws, r, inner_open_col, inner_close_cols
                     )
                     if in_any_p or (last_in_rec is not None and last_in_rec > 0):
                         ws.cell(r, inner_open_col).value = last_in_rec
