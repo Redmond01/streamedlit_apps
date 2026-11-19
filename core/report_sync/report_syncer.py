@@ -97,6 +97,179 @@ def _resolve_last_active_closing(
     return last_closing, any_positive_close
 
 
+def _get_raw_or_data_num(
+    ws: openpyxl.worksheet.worksheet.Worksheet,
+    r: int,
+    c: int,
+    ws_data: openpyxl.worksheet.worksheet.Worksheet | None = None,
+) -> float:
+    """Helper to get a numeric float from ws_data or ws."""
+    if ws_data and c <= ws_data.max_column and r <= ws_data.max_row:
+        v = ws_data.cell(r, c).value
+        if isinstance(v, (int, float)):
+            return float(v)
+    if c <= ws.max_column and r <= ws.max_row:
+        v = ws.cell(r, c).value
+        if isinstance(v, (int, float)):
+            return float(v)
+        if isinstance(v, str):
+            if v.startswith("="):
+                return _eval_sub_cell_formula(ws, v, ws_data)
+            try:
+                return float(v.replace(",", "").strip())
+            except ValueError:
+                pass
+    return 0.0
+
+
+def _eval_sub_cell_formula(
+    ws: openpyxl.worksheet.worksheet.Worksheet,
+    formula_str: str,
+    ws_data: openpyxl.worksheet.worksheet.Worksheet | None = None,
+) -> float:
+    """Evaluates sub-formulas like '=SUM(S3:S15)' or '=SUM(V16:V22)'."""
+    if not formula_str or not str(formula_str).startswith("="):
+        try:
+            return float(str(formula_str).replace(",", "").strip())
+        except (ValueError, TypeError):
+            return 0.0
+
+    s = str(formula_str).strip()[1:].strip()
+    if s.upper().startswith("SUM(") and s.endswith(")"):
+        inner = s[4:-1].strip()
+        if ":" in inner:
+            parts = inner.split(":")
+            m1 = re.match(r"^([A-Za-z]+)(\d+)$", parts[0].strip())
+            m2 = re.match(r"^([A-Za-z]+)(\d+)$", parts[1].strip())
+            if m1 and m2:
+                c1 = openpyxl.utils.column_index_from_string(m1.group(1).upper())
+                r1 = int(m1.group(2))
+                c2 = openpyxl.utils.column_index_from_string(m2.group(1).upper())
+                r2 = int(m2.group(2))
+                tot = 0.0
+                for r_i in range(r1, r2 + 1):
+                    for c_i in range(c1, c2 + 1):
+                        tot += _get_raw_or_data_num(ws, r_i, c_i, ws_data)
+                return tot
+
+    def _replace_ref(m):
+        c_i = openpyxl.utils.column_index_from_string(m.group(1).upper())
+        r_i = int(m.group(2))
+        return str(_get_raw_or_data_num(ws, r_i, c_i, ws_data))
+
+    expr = re.sub(r"([A-Za-z]+)(\d+)", _replace_ref, s)
+    try:
+        if re.match(r"^[0-9\.\+\-\*\/\(\)\s]+$", expr):
+            return float(eval(expr))
+    except Exception:
+        pass
+    return 0.0
+
+
+def _evaluate_cash_formula(
+    ws: openpyxl.worksheet.worksheet.Worksheet,
+    formula_str: str,
+    ws_data: openpyxl.worksheet.worksheet.Worksheet | None = None,
+) -> float | None:
+    """Evaluates an Excel cash balance formula like '=SUM(S17-V23-C26-...-Q28+R26)' safely."""
+    if not formula_str or not str(formula_str).startswith("="):
+        return None
+
+    s = str(formula_str).strip()[1:].strip()
+    if s.upper().startswith("SUM(") and s.endswith(")"):
+        s = s[4:-1].strip()
+
+    s = s.replace("--", "+").replace("+-", "-").replace("-+", "-")
+    tokens = re.findall(r"([+-]?\s*[A-Za-z0-9_]+)", s)
+    total = 0.0
+    found_any = False
+
+    for tok in tokens:
+        tok = tok.strip()
+        if not tok:
+            continue
+        sign = -1.0 if tok.startswith("-") else 1.0
+        tok = tok.lstrip("+-").strip()
+
+        m = re.match(r"^([A-Za-z]+)(\d+)$", tok)
+        if m:
+            col_letter, row_num = m.group(1).upper(), int(m.group(2))
+            c_idx = openpyxl.utils.column_index_from_string(col_letter)
+            val = None
+            if ws_data and c_idx <= ws_data.max_column and row_num <= ws_data.max_row:
+                v = ws_data.cell(row_num, c_idx).value
+                if isinstance(v, (int, float)):
+                    val = float(v)
+            if val is None and c_idx <= ws.max_column and row_num <= ws.max_row:
+                v = ws.cell(row_num, c_idx).value
+                if isinstance(v, (int, float)):
+                    val = float(v)
+                elif isinstance(v, str):
+                    if not v.startswith("="):
+                        try:
+                            val = float(v.replace(",", "").strip())
+                        except ValueError:
+                            val = 0.0
+                    else:
+                        val = _eval_sub_cell_formula(ws, v, ws_data)
+            if val is not None:
+                total += sign * val
+                found_any = True
+        else:
+            try:
+                total += sign * float(tok.replace(",", "").strip())
+                found_any = True
+            except ValueError:
+                pass
+
+    return round(total, 2) if found_any else None
+
+
+def _get_available_cash_value(
+    ws: openpyxl.worksheet.worksheet.Worksheet,
+    val_row: int,
+    col_avail: int | None,
+    ws_data: openpyxl.worksheet.worksheet.Worksheet | None = None,
+) -> float | None:
+    """Extracts or evaluates the ending Available Cash from a sheet.
+
+    Tries in priority:
+    1. Pre-calculated float from ws_data (data_only=True).
+    2. Static float from ws (if not a formula).
+    3. Formula evaluation from ws/ws_data.
+    """
+    if col_avail is None or col_avail > ws.max_column or val_row > ws.max_row:
+        return None
+
+    # 1. Check data_only workbook first
+    if ws_data and col_avail <= ws_data.max_column and val_row <= ws_data.max_row:
+        v_d = ws_data.cell(val_row, col_avail).value
+        if isinstance(v_d, (int, float)):
+            return float(v_d)
+        elif isinstance(v_d, str) and not v_d.startswith("="):
+            try:
+                return float(v_d.replace(",", "").strip())
+            except ValueError:
+                pass
+
+    # 2. Check standard workbook
+    v = ws.cell(val_row, col_avail).value
+    if isinstance(v, (int, float)):
+        return float(v)
+    elif isinstance(v, str) and not v.startswith("="):
+        try:
+            return float(v.replace(",", "").strip())
+        except ValueError:
+            pass
+    elif isinstance(v, str) and v.startswith("="):
+        # 3. Evaluate formula if cached value was missing
+        evaluated = _evaluate_cash_formula(ws, v, ws_data)
+        if evaluated is not None:
+            return evaluated
+
+    return None
+
+
 def clean_report_name(name_or_path: str | Path | Any) -> str:
     """Extracts a clean station report name from a filename, path, or UploadedFile.
 
@@ -557,9 +730,16 @@ def sync_station_report(
     for r in range(5, min(28, new_ws.max_row + 1)):
         for c in range(1, new_ws.max_column + 1):
             val = str(new_ws.cell(r, c).value or "").strip().upper()
-            if val == "EXPENSES":
+            if val == "EXPENSES" or val.startswith("EXPENSES"):
+                # Detect AMOUNT column for this expenses table (c + 1 or c + 2)
+                amt_col = c + 1
+                for c_amt in range(c + 1, min(c + 4, new_ws.max_column + 1)):
+                    if "AMOUNT" in str(new_ws.cell(r, c_amt).value or "").upper():
+                        amt_col = c_amt
+                        break
+
                 for r_sub in range(r + 1, min(r + 15, new_ws.max_row + 1)):
-                    amt_cell = new_ws.cell(r_sub, c + 1)
+                    amt_cell = new_ws.cell(r_sub, amt_col)
                     lbl_cell = new_ws.cell(r_sub, c)
                     lbl_str = str(lbl_cell.value or "").strip().upper()
                     if "TOTAL" in lbl_str:
@@ -567,6 +747,8 @@ def sync_station_report(
                     if amt_cell.value is not None and not str(amt_cell.value).startswith("="):
                         amt_cell.value = None
                         expenses_cleared += 1
+                    if lbl_cell.value is not None and not str(lbl_cell.value).startswith("="):
+                        lbl_cell.value = None
             elif "IMPREST" in val:
                 for c_scan in (c + 1, c + 2):
                     v_imp = new_ws.cell(r, c_scan).value
@@ -578,126 +760,137 @@ def sync_station_report(
     # 9. POS Table: Clear Values, Rollover Date, and Carry over Available Cash
     pos_cleared = 0
     for r in range(15, new_ws.max_row + 1):
-        for c in range(1, min(30, new_ws.max_column + 1)):
+        # Detect ADD UP header on this row across full column width
+        row_addup_cols = []
+        row_avail_cols = []
+        for c in range(1, new_ws.max_column + 1):
             val = str(new_ws.cell(r, c).value or "").strip().upper()
             val_norm = re.sub(r"[^A-Z0-9]", "", val)
             if "ADDUP" in val_norm or ("ADD" in val and "UP" in val):
-                header_row_1 = r
-                val_row_1 = r + 1
-                col_addup = c
-                # Determine col_avail_cash (usually col_addup + 1)
-                col_avail_cash = c + 1
-                for c_scan in range(c + 1, min(c + 5, new_ws.max_column + 1)):
-                    if "AVAILABLE" in str(new_ws.cell(header_row_1, c_scan).value or "").upper():
-                        col_avail_cash = c_scan
-                        break
+                row_addup_cols.append(c)
+            elif "AVAIL" in val:
+                row_avail_cols.append(c)
 
-                # Left side POS columns (cols 1 to c - 1)
-                for c_pos in range(1, col_addup):
-                    hdr_cell = new_ws.cell(header_row_1, c_pos).value
-                    if hdr_cell is not None and not str(hdr_cell).startswith("="):
-                        cell_to_clear = new_ws.cell(val_row_1, c_pos)
-                        if cell_to_clear.value is not None and not str(cell_to_clear.value).startswith("="):
-                            cell_to_clear.value = None
-                            pos_cleared += 1
+        if row_addup_cols:
+            header_row_1 = r
+            val_row_1 = r + 1
+            col_addup = row_addup_cols[0]
 
-                # Carry forward previous day's ending AVAILABLE CASH into ADD UP.
-                # Must be a static numeric figure (never an equation), ensuring ADD UP and
-                # AVAILABLE CASH match as the exact same figure on day opening.
-                prev_avail_cash = None
-                if src_ws_data and col_avail_cash <= src_ws_data.max_column:
-                    v_d = src_ws_data.cell(val_row_1, col_avail_cash).value
-                    if isinstance(v_d, (int, float)):
-                        prev_avail_cash = float(v_d)
-                    elif isinstance(v_d, str) and not v_d.startswith("="):
-                        try:
-                            prev_avail_cash = float(v_d.replace(",", "").strip())
-                        except ValueError:
-                            pass
+            # Find left col_avail_cash
+            left_avails = [c for c in row_avail_cols if c < (row_addup_cols[1] if len(row_addup_cols) > 1 else 30)]
+            col_avail_cash = left_avails[0] if left_avails else (col_addup + 1)
 
-                # Fallback if wb_data was not provided or had None: check src_ws
-                if prev_avail_cash is None and col_avail_cash <= src_ws.max_column:
-                    v_f = src_ws.cell(val_row_1, col_avail_cash).value
-                    if isinstance(v_f, (int, float)):
-                        prev_avail_cash = float(v_f)
-                    elif isinstance(v_f, str) and not v_f.startswith("="):
-                        try:
-                            prev_avail_cash = float(v_f.replace(",", "").strip())
-                        except ValueError:
-                            pass
+            # Left side POS columns (clear terminal values, skipping ADD UP and AVAILABLE CASH)
+            left_boundary = max(col_addup, col_avail_cash)
+            for c_pos in range(1, left_boundary + 1):
+                if c_pos == col_addup or c_pos == col_avail_cash:
+                    continue
+                hdr_cell = new_ws.cell(header_row_1, c_pos).value
+                if hdr_cell is not None and not str(hdr_cell).startswith("="):
+                    cell_to_clear = new_ws.cell(val_row_1, c_pos)
+                    if cell_to_clear.value is not None and not str(cell_to_clear.value).startswith("="):
+                        cell_to_clear.value = None
+                        pos_cleared += 1
 
-                # Second fallback: existing numeric ADD UP in src_ws
-                if prev_avail_cash is None and col_addup <= src_ws.max_column:
-                    v_a = src_ws.cell(val_row_1, col_addup).value
-                    if isinstance(v_a, (int, float)):
-                        prev_avail_cash = float(v_a)
+            # Carry forward yesterday's (sheet -1) ending AVAILABLE CASH into ADD UP
+            prev_avail_cash = _get_available_cash_value(src_ws, val_row_1, col_avail_cash, src_ws_data)
 
-                # Assign static float to ADD UP (never an equation)
-                if prev_avail_cash is not None:
-                    new_ws.cell(val_row_1, col_addup).value = round(float(prev_avail_cash), 2)
+            # Fallback to existing ADD UP only if available cash could not be resolved at all
+            if prev_avail_cash is None and col_addup <= src_ws.max_column:
+                v_a = src_ws.cell(val_row_1, col_addup).value
+                if isinstance(v_a, (int, float)):
+                    prev_avail_cash = float(v_a)
 
-                # Rollover row (Day N+1)
-                if header_row_1 + 3 <= new_ws.max_row:
-                    header_row_2 = header_row_1 + 2
-                    val_row_2 = header_row_1 + 3
+            # Assign static float of previous day's AVAILABLE CASH to ADD UP (never an equation)
+            if prev_avail_cash is not None:
+                static_val = round(float(prev_avail_cash), 2)
+                new_ws.cell(val_row_1, col_addup).value = static_val
 
-                    # Update rollover date cell (in Col A or B)
-                    for c_d in (1, 2):
-                        v_d = new_ws.cell(val_row_2, c_d).value
-                        parsed_d = _parse_cell_date(v_d)
-                        if parsed_d and new_date_dt:
-                            rollover_dt = new_date_dt + timedelta(days=1)
-                            if isinstance(v_d, str):
-                                if " " in v_d:
-                                    new_ws.cell(val_row_2, c_d).value = rollover_dt.strftime("%Y-%m-%d %H:%M:%S")
-                                else:
-                                    new_ws.cell(val_row_2, c_d).value = rollover_dt.strftime("%Y-%m-%d")
+                # Preserve formula on AVAILABLE CASH if it is an equation, else set static figure
+                src_avail_cell = src_ws.cell(val_row_1, col_avail_cash).value
+                if str(src_avail_cell or "").startswith("="):
+                    new_ws.cell(val_row_1, col_avail_cash).value = src_avail_cell
+                else:
+                    new_ws.cell(val_row_1, col_avail_cash).value = static_val
+
+            # Rollover row (Day N+1)
+            if header_row_1 + 3 <= new_ws.max_row:
+                header_row_2 = header_row_1 + 2
+                val_row_2 = header_row_1 + 3
+
+                # Update rollover date cell (in Col A or B)
+                for c_d in (1, 2):
+                    v_d = new_ws.cell(val_row_2, c_d).value
+                    parsed_d = _parse_cell_date(v_d)
+                    if parsed_d and new_date_dt:
+                        rollover_dt = new_date_dt + timedelta(days=1)
+                        if isinstance(v_d, str):
+                            if " " in v_d:
+                                new_ws.cell(val_row_2, c_d).value = rollover_dt.strftime("%Y-%m-%d %H:%M:%S")
                             else:
-                                new_ws.cell(val_row_2, c_d).value = rollover_dt
+                                new_ws.cell(val_row_2, c_d).value = rollover_dt.strftime("%Y-%m-%d")
+                        else:
+                            new_ws.cell(val_row_2, c_d).value = rollover_dt
 
-                    # Clear rollover POS values
-                    for c_pos in range(1, col_addup):
-                        hdr_cell = new_ws.cell(header_row_2, c_pos).value
-                        if hdr_cell is not None and not str(hdr_cell).startswith("="):
-                            cell_to_clear = new_ws.cell(val_row_2, c_pos)
-                            if cell_to_clear.value is not None and not str(cell_to_clear.value).startswith("="):
-                                cell_to_clear.value = None
-                                pos_cleared += 1
-
-                # Right side POS columns (from col_avail_cash + 1 to right ADD UP)
-                right_addup_col = None
-                for c_r in range(col_avail_cash + 1, new_ws.max_column + 1):
-                    v_r = str(new_ws.cell(header_row_1, c_r).value or "").strip().upper()
-                    if "ADD UP" in v_r:
-                        right_addup_col = c_r
-                        break
-
-                end_right_pos = right_addup_col if right_addup_col else new_ws.max_column + 1
-                for c_r in range(col_avail_cash + 1, end_right_pos):
-                    hdr_cell = new_ws.cell(header_row_1, c_r).value
-                    hdr_str = str(hdr_cell or "").strip().upper()
-                    if "ADD UP" in hdr_str or "AVAILABLE" in hdr_str:
+                # Clear rollover POS values
+                for c_pos in range(1, left_boundary + 1):
+                    if c_pos == col_addup or c_pos == col_avail_cash:
                         continue
+                    hdr_cell = new_ws.cell(header_row_2, c_pos).value
                     if hdr_cell is not None and not str(hdr_cell).startswith("="):
-                        cell_to_clear = new_ws.cell(val_row_1, c_r)
+                        cell_to_clear = new_ws.cell(val_row_2, c_pos)
                         if cell_to_clear.value is not None and not str(cell_to_clear.value).startswith("="):
                             cell_to_clear.value = None
                             pos_cleared += 1
 
-                # Ensure right-side ADD UP static figures are preserved (never an equation)
-                for c_scan in range(col_avail_cash + 1, new_ws.max_column + 1):
-                    if "ADD UP" in str(new_ws.cell(header_row_1, c_scan).value or "").upper():
-                        right_addup_val = src_ws.cell(val_row_1, c_scan).value
-                        if isinstance(right_addup_val, (int, float)):
-                            new_ws.cell(val_row_1, c_scan).value = right_addup_val
-                        elif isinstance(right_addup_val, str) and not right_addup_val.startswith("="):
-                            try:
-                                new_ws.cell(val_row_1, c_scan).value = float(right_addup_val.replace(",", "").strip())
-                            except ValueError:
-                                new_ws.cell(val_row_1, c_scan).value = right_addup_val
+            # Right side POS columns (if inner POS table exists)
+            right_addup_col = row_addup_cols[1] if len(row_addup_cols) > 1 else None
+            right_avail_col = None
+            if right_addup_col:
+                right_avails = [c for c in row_avail_cols if c >= (right_addup_col - 5)]
+                right_avail_col = right_avails[0] if right_avails else (right_addup_col + 1)
 
-                # Break after handling the primary POS table
-                break
+            min_right_c = left_boundary + 1
+            end_right_pos = right_addup_col if right_addup_col else new_ws.max_column + 1
+            for c_r in range(min_right_c, end_right_pos):
+                if (right_addup_col and c_r == right_addup_col) or (right_avail_col and c_r == right_avail_col):
+                    continue
+                hdr_cell = new_ws.cell(header_row_1, c_r).value
+                hdr_str = str(hdr_cell or "").strip().upper()
+                if "ADD UP" in hdr_str or "AVAILABLE" in hdr_str:
+                    continue
+                if hdr_cell is not None and not str(hdr_cell).startswith("="):
+                    cell_to_clear = new_ws.cell(val_row_1, c_r)
+                    if cell_to_clear.value is not None and not str(cell_to_clear.value).startswith("="):
+                        cell_to_clear.value = None
+                        pos_cleared += 1
+
+            # Ensure right-side ADD UP and AVAILABLE CASH figures are cleanly preserved (never an equation for ADD UP)
+            for c_scan in range(left_boundary + 1, new_ws.max_column + 1):
+                hdr_v = str(new_ws.cell(header_row_1, c_scan).value or "").strip().upper()
+                if "ADD UP" in hdr_v:
+                    src_val = src_ws.cell(val_row_1, c_scan).value
+                    if isinstance(src_val, (int, float)):
+                        new_ws.cell(val_row_1, c_scan).value = src_val
+                    elif isinstance(src_val, str) and not src_val.startswith("="):
+                        try:
+                            new_ws.cell(val_row_1, c_scan).value = float(src_val.replace(",", "").strip())
+                        except ValueError:
+                            new_ws.cell(val_row_1, c_scan).value = src_val
+                elif "AVAILABLE" in hdr_v:
+                    src_avail = src_ws.cell(val_row_1, c_scan).value
+                    if str(src_avail or "").startswith("="):
+                        new_ws.cell(val_row_1, c_scan).value = src_avail
+                    elif isinstance(src_avail, (int, float)):
+                        new_ws.cell(val_row_1, c_scan).value = src_avail
+                    elif isinstance(src_avail, str) and not src_avail.startswith("="):
+                        try:
+                            new_ws.cell(val_row_1, c_scan).value = float(src_avail.replace(",", "").strip())
+                        except ValueError:
+                            new_ws.cell(val_row_1, c_scan).value = src_avail
+
+            # Break after handling the primary POS table
+            break
 
     # Station name inference
     sheet_sample = src_ws.title

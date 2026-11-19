@@ -536,9 +536,10 @@ def auto_fill_sheet(
                         ws.cell(val_row_1, c_r).value = match_val
                         counts["pos"] += 1
 
-                # Maintain exact static figure on right ADD UP (never an equation)
-                left_addup_val = ws.cell(val_row_1, col_addup).value
-                if right_addup_col and left_addup_val is not None:
+                # If right ADD UP is empty/None, populate with static left figure
+                curr_right_addup = ws.cell(val_row_1, right_addup_col).value if right_addup_col else None
+                if right_addup_col and (curr_right_addup is None or str(curr_right_addup).strip() == ""):
+                    left_addup_val = ws.cell(val_row_1, col_addup).value
                     if isinstance(left_addup_val, (int, float)):
                         ws.cell(val_row_1, right_addup_col).value = left_addup_val
                     elif isinstance(left_addup_val, str) and not left_addup_val.startswith("="):
